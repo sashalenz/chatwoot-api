@@ -184,6 +184,8 @@ ChatwootApi::messages()
 | `automationRules()` | `list` / `get` / `create` / `update` / `delete` | Manage automation rules. |
 | `webhooks()` | `list` / `create` / `update` / `delete` | Manage account webhooks. |
 | `integrations()` | `apps()` / `createHook` / `updateHook` / `deleteHook` | List integration apps and manage hooks. |
+| `reports()` | `account` / `summary` / `conversations` / `firstResponseTimeDistribution` / `inboxLabelMatrix` / `outgoingMessagesCount` | Metrics & reports (v2 endpoints). |
+| `helpCenter()` | `listPortals` / `createPortal` / `updatePortal` / `createCategory` / `createArticle` | Manage Help Center portals, categories & articles. |
 | `client()` | `inbox()` | Read inbox info (health check). |
 | | `createContact(array $attributes)` | Upsert a contact → returns `source_id`. |
 | | `getContact(string $sourceId)` | Fetch a contact by `source_id`. |

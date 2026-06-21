@@ -13,12 +13,14 @@ use Sashalenz\ChatwootApi\ApiModels\Contacts;
 use Sashalenz\ChatwootApi\ApiModels\Conversations;
 use Sashalenz\ChatwootApi\ApiModels\CustomAttributeDefinitions;
 use Sashalenz\ChatwootApi\ApiModels\CustomFilters;
+use Sashalenz\ChatwootApi\ApiModels\HelpCenter;
 use Sashalenz\ChatwootApi\ApiModels\Inboxes;
 use Sashalenz\ChatwootApi\ApiModels\Integrations;
 use Sashalenz\ChatwootApi\ApiModels\Labels;
 use Sashalenz\ChatwootApi\ApiModels\Messages;
 use Sashalenz\ChatwootApi\ApiModels\Profile;
 use Sashalenz\ChatwootApi\ApiModels\PublicClient;
+use Sashalenz\ChatwootApi\ApiModels\Reports;
 use Sashalenz\ChatwootApi\ApiModels\Teams;
 use Sashalenz\ChatwootApi\ApiModels\Webhooks;
 
@@ -112,6 +114,16 @@ class ChatwootApi
     public static function integrations(): Integrations
     {
         return new Integrations;
+    }
+
+    public static function reports(): Reports
+    {
+        return new Reports;
+    }
+
+    public static function helpCenter(): HelpCenter
+    {
+        return new HelpCenter;
     }
 
     /**
