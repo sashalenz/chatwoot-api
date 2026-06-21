@@ -25,7 +25,7 @@ final class Contacts extends BaseModel
      */
     public function create(array $attributes): Collection
     {
-        return $this->post($this->accountPath('contacts'), $attributes);
+        return $this->httpPost($this->accountPath('contacts'), $attributes);
     }
 
     /**
@@ -38,7 +38,7 @@ final class Contacts extends BaseModel
      */
     public function update(int $contactId, array $attributes): Collection
     {
-        return $this->put($this->accountPath("contacts/{$contactId}"), $attributes);
+        return $this->httpPut($this->accountPath("contacts/{$contactId}"), $attributes);
     }
 
     /**
@@ -51,7 +51,7 @@ final class Contacts extends BaseModel
      */
     public function createInbox(int $contactId, int $inboxId, ?string $sourceId = null): Collection
     {
-        return $this->post(
+        return $this->httpPost(
             $this->accountPath("contacts/{$contactId}/contact_inboxes"),
             array_filter([
                 'inbox_id' => $inboxId,

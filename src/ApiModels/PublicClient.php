@@ -70,6 +70,18 @@ final class PublicClient
     }
 
     /**
+     * Fetch a contact by `source_id`.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function getContact(string $sourceId): Collection
+    {
+        return $this->dispatch('GET', $this->base("contacts/{$sourceId}"));
+    }
+
+    /**
      * Update a contact (name / custom_attributes refresh from CRM).
      *
      * @param  array<string,mixed>  $attributes
@@ -96,6 +108,30 @@ final class PublicClient
     }
 
     /**
+     * List the contact's conversations.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function listConversations(string $sourceId): Collection
+    {
+        return $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations"));
+    }
+
+    /**
+     * Fetch a single conversation of the contact.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function getConversation(string $sourceId, int $conversationId): Collection
+    {
+        return $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations/{$conversationId}"));
+    }
+
+    /**
      * Push a customer message into a conversation (always `incoming`).
      *
      * @param  array<string,mixed>  $extra
@@ -109,6 +145,36 @@ final class PublicClient
             'POST',
             $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages"),
             ['content' => $content, ...$extra],
+        );
+    }
+
+    /**
+     * List the messages of a conversation.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function listMessages(string $sourceId, int $conversationId): Collection
+    {
+        return $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages"));
+    }
+
+    /**
+     * Update a message (e.g. submit a CSAT rating or feedback on the
+     * conversation's survey message).
+     *
+     * @param  array<string,mixed>  $attributes  e.g. ['submitted_values'=>['csat_survey_response'=>['rating'=>5, 'feedback_message'=>'…']]]
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function updateMessage(string $sourceId, int $conversationId, int $messageId, array $attributes): Collection
+    {
+        return $this->dispatch(
+            'PATCH',
+            $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages/{$messageId}"),
+            $attributes,
         );
     }
 

@@ -93,6 +93,56 @@ it('sends an attachment with no caption (content omitted)', function (): void {
     });
 });
 
+it('fetches a contact by source_id', function (): void {
+    Http::fake(['*' => Http::response(['source_id' => 'src-1', 'name' => 'Petro'], 200)]);
+
+    $result = ChatwootApi::client()->getContact('src-1');
+
+    expect($result->get('name'))->toBe('Petro');
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1');
+});
+
+it('lists the conversations of a contact', function (): void {
+    Http::fake(['*' => Http::response([['id' => 9]], 200)]);
+
+    ChatwootApi::client()->listConversations('src-1');
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations');
+});
+
+it('fetches a single conversation of a contact', function (): void {
+    Http::fake(['*' => Http::response(['id' => 9], 200)]);
+
+    ChatwootApi::client()->getConversation('src-1', 9);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations/9');
+});
+
+it('lists the messages of a conversation', function (): void {
+    Http::fake(['*' => Http::response([['id' => 77]], 200)]);
+
+    ChatwootApi::client()->listMessages('src-1', 9);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations/9/messages');
+});
+
+it('updates a message (CSAT response)', function (): void {
+    Http::fake(['*' => Http::response(['id' => 77], 200)]);
+
+    ChatwootApi::client()->updateMessage('src-1', 9, 77, [
+        'submitted_values' => ['csat_survey_response' => ['rating' => 5]],
+    ]);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH'
+        && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations/9/messages/77'
+        && data_get($request->data(), 'submitted_values.csat_survey_response.rating') === 5);
+});
+
 it('updates a contact via PATCH', function (): void {
     Http::fake(['*' => Http::response(['source_id' => 'src-1'], 200)]);
 

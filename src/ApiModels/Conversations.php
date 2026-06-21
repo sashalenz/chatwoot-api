@@ -24,11 +24,24 @@ final class Conversations extends BaseModel
      */
     public function create(string $sourceId, int $inboxId, array $extra = []): Collection
     {
-        return $this->post($this->accountPath('conversations'), [
+        return $this->httpPost($this->accountPath('conversations'), [
             'source_id' => $sourceId,
             'inbox_id' => $inboxId,
             ...$extra,
         ]);
+    }
+
+    /**
+     * List conversations in the account.
+     *
+     * @param  array<string,mixed>  $filters  optional query: ['assignee_type'=>'me|unassigned|assigned|all', 'status'=>'open|resolved|pending|snoozed|all', 'inbox_id'=>…, 'team_id'=>…, 'labels'=>[…], 'q'=>…, 'page'=>1]
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function list(array $filters = []): Collection
+    {
+        return $this->httpGet($this->accountPath('conversations'), $filters);
     }
 
     /**
@@ -40,7 +53,21 @@ final class Conversations extends BaseModel
      */
     public function show(int $conversationId): Collection
     {
-        return $this->get($this->accountPath("conversations/{$conversationId}"));
+        return $this->httpGet($this->accountPath("conversations/{$conversationId}"));
+    }
+
+    /**
+     * Update a conversation (e.g. `priority`, `additional_attributes`,
+     * `snoozed_until`).
+     *
+     * @param  array<string,mixed>  $attributes
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function update(int $conversationId, array $attributes): Collection
+    {
+        return $this->httpPatch($this->accountPath("conversations/{$conversationId}"), $attributes);
     }
 
     /**
@@ -53,7 +80,7 @@ final class Conversations extends BaseModel
      */
     public function toggleStatus(int $conversationId, string $status): Collection
     {
-        return $this->post(
+        return $this->httpPost(
             $this->accountPath("conversations/{$conversationId}/toggle_status"),
             ['status' => $status],
         );

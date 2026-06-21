@@ -20,6 +20,28 @@ it('creates a conversation from a source_id and inbox_id', function (): void {
         && $request['status'] === 'open');
 });
 
+it('lists conversations with filters as query params', function (): void {
+    Http::fake(['*' => Http::response(['data' => ['payload' => []]], 200)]);
+
+    ChatwootApi::conversations()->list(['status' => 'open', 'assignee_type' => 'me', 'page' => 2]);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && str_starts_with($request->url(), 'https://chatwoot.test/api/v1/accounts/1/conversations?')
+        && $request['status'] === 'open'
+        && $request['assignee_type'] === 'me'
+        && $request['page'] === 2);
+});
+
+it('updates a conversation via PATCH', function (): void {
+    Http::fake(['*' => Http::response(['id' => 99, 'priority' => 'high'], 200)]);
+
+    ChatwootApi::conversations()->update(99, ['priority' => 'high']);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'PATCH'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99'
+        && $request['priority'] === 'high');
+});
+
 it('fetches a single conversation via GET', function (): void {
     Http::fake(['*' => Http::response(['id' => 99, 'status' => 'open'], 200)]);
 

@@ -92,7 +92,7 @@ abstract class BaseModel
      *
      * @throws ChatwootApiException
      */
-    protected function get(string $path, array $query = []): Collection
+    protected function httpGet(string $path, array $query = []): Collection
     {
         return $this->dispatch('GET', $path, $query);
     }
@@ -103,7 +103,7 @@ abstract class BaseModel
      *
      * @throws ChatwootApiException
      */
-    protected function post(string $path, array $body = []): Collection
+    protected function httpPost(string $path, array $body = []): Collection
     {
         return $this->dispatch('POST', $path, $body);
     }
@@ -114,9 +114,31 @@ abstract class BaseModel
      *
      * @throws ChatwootApiException
      */
-    protected function put(string $path, array $body = []): Collection
+    protected function httpPut(string $path, array $body = []): Collection
     {
         return $this->dispatch('PUT', $path, $body);
+    }
+
+    /**
+     * @param  array<string,mixed>  $body
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    protected function httpPatch(string $path, array $body = []): Collection
+    {
+        return $this->dispatch('PATCH', $path, $body);
+    }
+
+    /**
+     * @param  array<string,mixed>  $body
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    protected function httpDelete(string $path, array $body = []): Collection
+    {
+        return $this->dispatch('DELETE', $path, $body);
     }
 
     /**

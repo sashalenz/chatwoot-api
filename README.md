@@ -144,14 +144,24 @@ ChatwootApi::messages()
 | | `update(int $contactId, array $attributes)` | Update a contact. |
 | | `createInbox(int $contactId, int $inboxId, ?string $sourceId = null)` | Associate an existing contact with an inbox and get a `source_id`. |
 | `conversations()` | `create(string $sourceId, int $inboxId, array $extra = [])` | Create a conversation for a contact-inbox. |
+| | `list(array $filters = [])` | List conversations (filters: `status`, `assignee_type`, `inbox_id`, `team_id`, `labels`, `q`, `page`). |
 | | `show(int $conversationId)` | Fetch a single conversation. |
+| | `update(int $conversationId, array $attributes)` | Update a conversation (`priority`, `additional_attributes`, …). |
 | | `toggleStatus(int $conversationId, string $status)` | Set status: `open`, `pending`, `resolved` or `snoozed`. |
 | `messages()` | `create(int $conversationId, string $content, string $messageType = 'incoming', array $extra = [])` | Post a message (`incoming` or `outgoing`). |
+| | `list(int $conversationId, array $query = [])` | List messages of a conversation. |
+| | `delete(int $conversationId, int $messageId)` | Delete a message. |
 | `client()` | `inbox()` | Read inbox info (health check). |
 | | `createContact(array $attributes)` | Upsert a contact → returns `source_id`. |
+| | `getContact(string $sourceId)` | Fetch a contact by `source_id`. |
 | | `updateContact(string $sourceId, array $attributes)` | Update a contact (name / custom attributes). |
 | | `createConversation(string $sourceId, array $extra = [])` | Open a conversation for the contact. |
+| | `listConversations(string $sourceId)` | List the contact's conversations. |
+| | `getConversation(string $sourceId, int $conversationId)` | Fetch one conversation of the contact. |
 | | `createMessage(string $sourceId, int $conversationId, string $content, array $extra = [])` | Push an `incoming` message. |
+| | `createMessageWithAttachments(string $sourceId, int $conversationId, ?string $content, array $attachments)` | Push an `incoming` message with file attachments (multipart). |
+| | `listMessages(string $sourceId, int $conversationId)` | List the messages of a conversation. |
+| | `updateMessage(string $sourceId, int $conversationId, int $messageId, array $attributes)` | Update a message (e.g. CSAT response). |
 | | `identifierHash(string $contactIdentifier)` | HMAC hash for identity validation. |
 
 See the [Chatwoot Application API reference](https://developers.chatwoot.com/api-reference)
