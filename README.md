@@ -141,13 +141,33 @@ ChatwootApi::messages()
 | Resource | Method | Description |
 |----------|--------|-------------|
 | `contacts()` | `create(array $attributes)` | Create a contact. |
+| | `list(array $query = [])` | List contacts. |
+| | `get(int $contactId)` | Fetch a single contact. |
 | | `update(int $contactId, array $attributes)` | Update a contact. |
+| | `delete(int $contactId)` | Delete a contact. |
+| | `search(string $q, array $query = [])` | Free-text search (name/email/phone/identifier). |
+| | `filter(array $payload)` | Advanced contact filtering (query-builder payload). |
 | | `createInbox(int $contactId, int $inboxId, ?string $sourceId = null)` | Associate an existing contact with an inbox and get a `source_id`. |
+| | `contactableInboxes(int $contactId)` | Inboxes the contact can be reached on. |
+| | `conversations(int $contactId)` | List the contact's conversations. |
+| | `labels(int $contactId)` / `addLabels(int $contactId, array $labels)` | List / set the contact's labels. |
 | `conversations()` | `create(string $sourceId, int $inboxId, array $extra = [])` | Create a conversation for a contact-inbox. |
 | | `list(array $filters = [])` | List conversations (filters: `status`, `assignee_type`, `inbox_id`, `team_id`, `labels`, `q`, `page`). |
 | | `show(int $conversationId)` | Fetch a single conversation. |
 | | `update(int $conversationId, array $attributes)` | Update a conversation (`priority`, `additional_attributes`, …). |
+| | `meta(array $query = [])` | Conversation counts (mine / unassigned / assigned / all). |
+| | `filter(array $payload)` | Advanced conversation filtering (query-builder payload). |
 | | `toggleStatus(int $conversationId, string $status)` | Set status: `open`, `pending`, `resolved` or `snoozed`. |
+| | `togglePriority(int $conversationId, string $priority)` | Set priority: `urgent`/`high`/`medium`/`low`/`none`. |
+| | `assign(int $conversationId, ?int $assigneeId, ?int $teamId)` | Assign to an agent and/or team. |
+| | `setCustomAttributes(int $conversationId, array $customAttributes)` | Set conversation custom attributes. |
+| | `labels(int $conversationId)` / `addLabels(int $conversationId, array $labels)` | List / set conversation labels. |
+| | `toggleTyping(int $conversationId, string $typingStatus)` | Toggle agent typing indicator (`on`/`off`). |
+| `inboxes()` | `list()` / `get(int $inboxId)` | List inboxes / fetch one. |
+| | `create(array $attributes)` / `update(int $inboxId, array $attributes)` | Create / update an inbox. |
+| | `agentBot(int $inboxId)` / `setAgentBot(int $inboxId, ?int $agentBotId)` | Show / assign (or detach) the inbox agent-bot. |
+| | `members(int $inboxId)` | List inbox agent members. |
+| | `addMembers` / `updateMembers` / `removeMembers (int $inboxId, array $userIds)` | Manage inbox agent members. |
 | `messages()` | `create(int $conversationId, string $content, string $messageType = 'incoming', array $extra = [])` | Post a message (`incoming` or `outgoing`). |
 | | `list(int $conversationId, array $query = [])` | List messages of a conversation. |
 | | `delete(int $conversationId, int $messageId)` | Delete a message. |

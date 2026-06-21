@@ -6,6 +6,7 @@ namespace Sashalenz\ChatwootApi;
 
 use Sashalenz\ChatwootApi\ApiModels\Contacts;
 use Sashalenz\ChatwootApi\ApiModels\Conversations;
+use Sashalenz\ChatwootApi\ApiModels\Inboxes;
 use Sashalenz\ChatwootApi\ApiModels\Messages;
 use Sashalenz\ChatwootApi\ApiModels\PublicClient;
 
@@ -34,6 +35,11 @@ class ChatwootApi
     public static function messages(): Messages
     {
         return new Messages;
+    }
+
+    public static function inboxes(): Inboxes
+    {
+        return new Inboxes;
     }
 
     /**

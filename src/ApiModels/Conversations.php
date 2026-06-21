@@ -85,4 +85,124 @@ final class Conversations extends BaseModel
             ['status' => $status],
         );
     }
+
+    /**
+     * Toggle conversation priority. Valid values: `urgent`, `high`, `medium`,
+     * `low`, or `none` (clears the priority).
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function togglePriority(int $conversationId, string $priority): Collection
+    {
+        return $this->httpPost(
+            $this->accountPath("conversations/{$conversationId}/toggle_priority"),
+            ['priority' => $priority],
+        );
+    }
+
+    /**
+     * Assign the conversation to an agent and/or a team. Pass `null` for either
+     * to unassign.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function assign(int $conversationId, ?int $assigneeId = null, ?int $teamId = null): Collection
+    {
+        return $this->httpPost(
+            $this->accountPath("conversations/{$conversationId}/assignments"),
+            array_filter([
+                'assignee_id' => $assigneeId,
+                'team_id' => $teamId,
+            ], static fn ($v): bool => $v !== null),
+        );
+    }
+
+    /**
+     * Set conversation-level custom attributes.
+     *
+     * @param  array<string,mixed>  $customAttributes
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function setCustomAttributes(int $conversationId, array $customAttributes): Collection
+    {
+        return $this->httpPost(
+            $this->accountPath("conversations/{$conversationId}/custom_attributes"),
+            ['custom_attributes' => $customAttributes],
+        );
+    }
+
+    /**
+     * List labels on the conversation.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function labels(int $conversationId): Collection
+    {
+        return $this->httpGet($this->accountPath("conversations/{$conversationId}/labels"));
+    }
+
+    /**
+     * Replace the conversation's labels with the given set.
+     *
+     * @param  array<int,string>  $labels
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function addLabels(int $conversationId, array $labels): Collection
+    {
+        return $this->httpPost(
+            $this->accountPath("conversations/{$conversationId}/labels"),
+            ['labels' => $labels],
+        );
+    }
+
+    /**
+     * Toggle the agent typing indicator — `on` / `off`.
+     *
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function toggleTyping(int $conversationId, string $typingStatus): Collection
+    {
+        return $this->httpPost(
+            $this->accountPath("conversations/{$conversationId}/toggle_typing_status"),
+            ['typing_status' => $typingStatus],
+        );
+    }
+
+    /**
+     * Conversation counts (mine / unassigned / assigned / all).
+     *
+     * @param  array<string,mixed>  $query  optional: ['status'=>…, 'inbox_id'=>…, 'team_id'=>…, 'labels'=>[…], 'q'=>…]
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function meta(array $query = []): Collection
+    {
+        return $this->httpGet($this->accountPath('conversations/meta'), $query);
+    }
+
+    /**
+     * Advanced conversation filtering (query-builder payload).
+     *
+     * @param  array<string,mixed>  $payload
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function filter(array $payload): Collection
+    {
+        return $this->httpPost($this->accountPath('conversations/filter'), $payload);
+    }
 }

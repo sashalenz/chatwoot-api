@@ -59,3 +59,87 @@ it('updates a contact via PUT', function (): void {
     Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7');
 });
+
+it('lists contacts', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::contacts()->list(['page' => 2]);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && str_starts_with($request->url(), 'https://chatwoot.test/api/v1/accounts/1/contacts?')
+        && $request['page'] === 2);
+});
+
+it('fetches a single contact', function (): void {
+    Http::fake(['*' => Http::response(['payload' => ['id' => 7]], 200)]);
+
+    ChatwootApi::contacts()->get(7);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7');
+});
+
+it('searches contacts by query', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::contacts()->search('petro');
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && str_starts_with($request->url(), 'https://chatwoot.test/api/v1/accounts/1/contacts/search?')
+        && $request['q'] === 'petro');
+});
+
+it('filters contacts via POST', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::contacts()->filter(['payload' => [['attribute_key' => 'email', 'filter_operator' => 'contains', 'values' => ['@a20']]]]);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/filter');
+});
+
+it('deletes a contact', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    ChatwootApi::contacts()->delete(7);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7');
+});
+
+it('lists contactable inboxes', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    ChatwootApi::contacts()->contactableInboxes(7);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7/contactable_inboxes');
+});
+
+it('lists a contact conversations', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::contacts()->conversations(7);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7/conversations');
+});
+
+it('adds labels to a contact', function (): void {
+    Http::fake(['*' => Http::response(['payload' => ['vip']], 200)]);
+
+    ChatwootApi::contacts()->addLabels(7, ['vip', 'wholesale']);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7/labels'
+        && $request['labels'] === ['vip', 'wholesale']);
+});
+
+it('lists labels of a contact', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::contacts()->labels(7);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7/labels');
+});

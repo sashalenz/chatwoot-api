@@ -60,3 +60,82 @@ it('toggles conversation status for handoff', function (): void {
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/toggle_status'
         && $request['status'] === 'open');
 });
+
+it('toggles conversation priority', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    ChatwootApi::conversations()->togglePriority(99, 'high');
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/toggle_priority'
+        && $request['priority'] === 'high');
+});
+
+it('assigns a conversation to an agent', function (): void {
+    Http::fake(['*' => Http::response(['id' => 5], 200)]);
+
+    ChatwootApi::conversations()->assign(99, assigneeId: 5);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/assignments'
+        && $request['assignee_id'] === 5
+        && ! array_key_exists('team_id', $request->data()));
+});
+
+it('sets conversation custom attributes', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    ChatwootApi::conversations()->setCustomAttributes(99, ['order_id' => 'A-1']);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/custom_attributes'
+        && data_get($request->data(), 'custom_attributes.order_id') === 'A-1');
+});
+
+it('adds labels to a conversation', function (): void {
+    Http::fake(['*' => Http::response(['payload' => ['vip']], 200)]);
+
+    ChatwootApi::conversations()->addLabels(99, ['vip']);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/labels'
+        && $request['labels'] === ['vip']);
+});
+
+it('lists labels of a conversation', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::conversations()->labels(99);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/labels');
+});
+
+it('toggles agent typing status', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    ChatwootApi::conversations()->toggleTyping(99, 'on');
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/toggle_typing_status'
+        && $request['typing_status'] === 'on');
+});
+
+it('fetches conversation counts via meta', function (): void {
+    Http::fake(['*' => Http::response(['meta' => ['all_count' => 3]], 200)]);
+
+    ChatwootApi::conversations()->meta(['status' => 'open']);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+        && str_starts_with($request->url(), 'https://chatwoot.test/api/v1/accounts/1/conversations/meta?')
+        && $request['status'] === 'open');
+});
+
+it('filters conversations via POST', function (): void {
+    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+
+    ChatwootApi::conversations()->filter(['payload' => []]);
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/filter');
+});
