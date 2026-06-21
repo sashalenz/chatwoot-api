@@ -7,6 +7,7 @@ namespace Sashalenz\ChatwootApi;
 use Sashalenz\ChatwootApi\ApiModels\Contacts;
 use Sashalenz\ChatwootApi\ApiModels\Conversations;
 use Sashalenz\ChatwootApi\ApiModels\Messages;
+use Sashalenz\ChatwootApi\ApiModels\PublicClient;
 
 /**
  * Static entrypoint, mirroring `MonobankApi`/`ViberBotApi`.
@@ -33,5 +34,14 @@ class ChatwootApi
     public static function messages(): Messages
     {
         return new Messages;
+    }
+
+    /**
+     * Client API (API-channel) — the inbound bridge surface. Auth is the inbox
+     * identifier (config `chatwoot-api.identifier`), no agent token.
+     */
+    public static function client(?string $identifier = null): PublicClient
+    {
+        return new PublicClient($identifier);
     }
 }

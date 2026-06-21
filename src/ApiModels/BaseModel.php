@@ -73,7 +73,7 @@ abstract class BaseModel
      */
     protected function accountPath(string $suffix): string
     {
-        return 'accounts/'.$this->resolveAccountId().'/'.ltrim($suffix, '/');
+        return 'api/v1/accounts/'.$this->resolveAccountId().'/'.ltrim($suffix, '/');
     }
 
     /**

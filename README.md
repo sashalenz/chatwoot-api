@@ -38,15 +38,28 @@ Set the following variables in your `.env`:
 
 ```dotenv
 CHATWOOT_BASE_URL=https://app.chatwoot.com
+
+# Application API (agent/system side)
 CHATWOOT_ACCOUNT_ID=1
 CHATWOOT_API_TOKEN=your-api-access-token
+
+# Client API (API-channel inbound bridge)
+CHATWOOT_INBOX_IDENTIFIER=your-inbox-identifier
+CHATWOOT_HMAC_KEY=your-hmac-key   # optional, only if the inbox enables identity validation
 ```
 
 | Key | Env | Description |
 |-----|-----|-------------|
 | `base_url` | `CHATWOOT_BASE_URL` | Base URL of your Chatwoot installation. Do **not** include the `/api/v1` prefix — the transport adds it. |
-| `account_id` | `CHATWOOT_ACCOUNT_ID` | Default account id used in the API path. Can be overridden per call. |
-| `token` | `CHATWOOT_API_TOKEN` | Application API access token sent in the `api_access_token` header. Can be overridden per call. |
+| `account_id` | `CHATWOOT_ACCOUNT_ID` | Default account id for the **Application API** path. Can be overridden per call. |
+| `token` | `CHATWOOT_API_TOKEN` | **Application API** access token sent in the `api_access_token` header. Can be overridden per call. |
+| `identifier` | `CHATWOOT_INBOX_IDENTIFIER` | **Client API** inbox identifier (from the API-channel inbox settings). Auth for the public bridge surface — no agent token needed. |
+| `hmac_key` | `CHATWOOT_HMAC_KEY` | Optional HMAC key for Client API identity validation. |
+
+### Two API families
+
+- **Application API** (`contacts()`, `conversations()`, `messages()`) — the agent/system side. Authenticates with an agent/user **access token** and acts within an account.
+- **Client API** (`client()`) — the public **API-channel** surface. Authenticates with the **inbox identifier** (no agent token) and is the canonical path for an integration that pushes a customer's messages *into* Chatwoot as `incoming`.
 
 ## Usage
 
@@ -81,6 +94,37 @@ ChatwootApi::messages()->create(
 ChatwootApi::conversations()->toggleStatus((int) $conversation->get('id'), 'open');
 ```
 
+### Client API (API-channel inbound bridge)
+
+Push a customer's messages into an API-channel inbox using only the inbox
+identifier — no agent token. Messages are created as `incoming`.
+
+```php
+use Sashalenz\ChatwootApi\ChatwootApi;
+
+// 1) Upsert the contact (pass `identifier` to keep it stable across sessions).
+$contact = ChatwootApi::client()->createContact([
+    'identifier' => 'viber:01234567890A=',
+    'name' => 'Petro',
+    'custom_attributes' => ['client_id' => 42],
+]);
+$sourceId = $contact->get('source_id');
+
+// 2) Open a conversation, 3) push the incoming message.
+$conversation = ChatwootApi::client()->createConversation($sourceId);
+ChatwootApi::client()->createMessage($sourceId, (int) $conversation->get('id'), 'Привіт');
+
+// Per-call inbox override + identity hash (when the inbox enables validation):
+ChatwootApi::client('other-inbox')->createContact([
+    'identifier' => 'viber:xyz',
+    'identifier_hash' => ChatwootApi::client()->identifierHash('viber:xyz'),
+]);
+```
+
+Agent replies flow back to you via the inbox **Webhook URL** (a `message_created`
+event with `message_type: outgoing`) — handle that in your app and deliver to the
+transport.
+
 ### Per-call account & token overrides
 
 Useful for multi-account or multi-token setups. Any override wins over the config value:
@@ -103,6 +147,12 @@ ChatwootApi::messages()
 | | `show(int $conversationId)` | Fetch a single conversation. |
 | | `toggleStatus(int $conversationId, string $status)` | Set status: `open`, `pending`, `resolved` or `snoozed`. |
 | `messages()` | `create(int $conversationId, string $content, string $messageType = 'incoming', array $extra = [])` | Post a message (`incoming` or `outgoing`). |
+| `client()` | `inbox()` | Read inbox info (health check). |
+| | `createContact(array $attributes)` | Upsert a contact → returns `source_id`. |
+| | `updateContact(string $sourceId, array $attributes)` | Update a contact (name / custom attributes). |
+| | `createConversation(string $sourceId, array $extra = [])` | Open a conversation for the contact. |
+| | `createMessage(string $sourceId, int $conversationId, string $content, array $extra = [])` | Push an `incoming` message. |
+| | `identifierHash(string $contactIdentifier)` | HMAC hash for identity validation. |
 
 See the [Chatwoot Application API reference](https://developers.chatwoot.com/api-reference)
 for the full set of accepted attributes.

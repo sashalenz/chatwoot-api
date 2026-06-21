@@ -23,5 +23,7 @@ class TestCase extends Orchestra
         $app['config']->set('chatwoot-api.base_url', 'https://chatwoot.test');
         $app['config']->set('chatwoot-api.account_id', 1);
         $app['config']->set('chatwoot-api.token', 'test-token');
+        $app['config']->set('chatwoot-api.identifier', 'inbox-ident');
+        $app['config']->set('chatwoot-api.hmac_key', 'hmac-secret');
     }
 }

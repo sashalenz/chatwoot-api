@@ -42,7 +42,7 @@ final class Request
     {
         $request = Http::timeout(self::TIMEOUT)
             ->retry(self::RETRY_TIMES, self::RETRY_SLEEP)
-            ->baseUrl(rtrim((string) config('chatwoot-api.base_url'), '/').'/api/v1')
+            ->baseUrl(rtrim((string) config('chatwoot-api.base_url'), '/'))
             ->withHeaders($this->headers)
             ->acceptJson();
 
@@ -51,6 +51,7 @@ final class Request
                 'GET' => $request->get($this->path, $this->params),
                 'POST' => $request->asJson()->post($this->path, $this->params),
                 'PUT' => $request->asJson()->put($this->path, $this->params),
+                'PATCH' => $request->asJson()->patch($this->path, $this->params),
                 'DELETE' => $request->asJson()->delete($this->path, $this->params),
                 default => throw new ChatwootApiException("Unsupported HTTP method [{$this->method}]."),
             })->throw();
