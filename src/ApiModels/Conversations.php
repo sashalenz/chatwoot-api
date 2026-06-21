@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sashalenz\ChatwootApi\ApiModels;
 
 use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\ConversationData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -18,42 +20,46 @@ final class Conversations extends BaseModel
      * Create a conversation for a contact-inbox `source_id`.
      *
      * @param  array<string,mixed>  $extra  optional: ['contact_id'=>…, 'status'=>'open', 'additional_attributes'=>[…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(string $sourceId, int $inboxId, array $extra = []): Collection
+    public function create(string $sourceId, int $inboxId, array $extra = []): ConversationData
     {
-        return $this->httpPost($this->accountPath('conversations'), [
+        $resp = $this->httpPost($this->accountPath('conversations'), [
             'source_id' => $sourceId,
             'inbox_id' => $inboxId,
             ...$extra,
-        ]);
+        ])->all();
+
+        return ConversationData::from($resp);
     }
 
     /**
      * List conversations in the account.
      *
      * @param  array<string,mixed>  $filters  optional query: ['assignee_type'=>'me|unassigned|assigned|all', 'status'=>'open|resolved|pending|snoozed|all', 'inbox_id'=>…, 'team_id'=>…, 'labels'=>[…], 'q'=>…, 'page'=>1]
-     * @return Collection<string,mixed>
+     * @return Paginated<ConversationData>
      *
      * @throws ChatwootApiException
      */
-    public function list(array $filters = []): Collection
+    public function list(array $filters = []): Paginated
     {
-        return $this->httpGet($this->accountPath('conversations'), $filters);
+        /** @var array<string,mixed> $data */
+        $data = $this->httpGet($this->accountPath('conversations'), $filters)->get('data', []);
+
+        return Paginated::fromResponse($data, ConversationData::class);
     }
 
     /**
-     * Fetch a single conversation (id, status, meta).
-     *
-     * @return Collection<string,mixed>
+     * Fetch a single conversation (id, status, meta, embedded messages).
      *
      * @throws ChatwootApiException
      */
-    public function show(int $conversationId): Collection
+    public function show(int $conversationId): ConversationData
     {
-        return $this->httpGet($this->accountPath("conversations/{$conversationId}"));
+        return ConversationData::from(
+            $this->httpGet($this->accountPath("conversations/{$conversationId}"))->all(),
+        );
     }
 
     /**
@@ -61,13 +67,30 @@ final class Conversations extends BaseModel
      * `snoozed_until`).
      *
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $conversationId, array $attributes): Collection
+    public function update(int $conversationId, array $attributes): ConversationData
     {
-        return $this->httpPatch($this->accountPath("conversations/{$conversationId}"), $attributes);
+        return ConversationData::from(
+            $this->httpPatch($this->accountPath("conversations/{$conversationId}"), $attributes)->all(),
+        );
+    }
+
+    /**
+     * Advanced conversation filtering (query-builder payload).
+     *
+     * @param  array<string,mixed>  $payload
+     * @return Paginated<ConversationData>
+     *
+     * @throws ChatwootApiException
+     */
+    public function filter(array $payload): Paginated
+    {
+        /** @var array<string,mixed> $data */
+        $data = $this->httpPost($this->accountPath('conversations/filter'), $payload)->get('data', []);
+
+        return Paginated::fromResponse($data, ConversationData::class);
     }
 
     /**
@@ -140,29 +163,35 @@ final class Conversations extends BaseModel
     /**
      * List labels on the conversation.
      *
-     * @return Collection<string,mixed>
+     * @return array<int,string>
      *
      * @throws ChatwootApiException
      */
-    public function labels(int $conversationId): Collection
+    public function labels(int $conversationId): array
     {
-        return $this->httpGet($this->accountPath("conversations/{$conversationId}/labels"));
+        /** @var array<int,string> $labels */
+        $labels = $this->httpGet($this->accountPath("conversations/{$conversationId}/labels"))->get('payload', []);
+
+        return $labels;
     }
 
     /**
-     * Replace the conversation's labels with the given set.
+     * Replace the conversation's labels with the given set; returns the new set.
      *
      * @param  array<int,string>  $labels
-     * @return Collection<string,mixed>
+     * @return array<int,string>
      *
      * @throws ChatwootApiException
      */
-    public function addLabels(int $conversationId, array $labels): Collection
+    public function addLabels(int $conversationId, array $labels): array
     {
-        return $this->httpPost(
+        /** @var array<int,string> $result */
+        $result = $this->httpPost(
             $this->accountPath("conversations/{$conversationId}/labels"),
             ['labels' => $labels],
-        );
+        )->get('payload', []);
+
+        return $result;
     }
 
     /**
@@ -191,18 +220,5 @@ final class Conversations extends BaseModel
     public function meta(array $query = []): Collection
     {
         return $this->httpGet($this->accountPath('conversations/meta'), $query);
-    }
-
-    /**
-     * Advanced conversation filtering (query-builder payload).
-     *
-     * @param  array<string,mixed>  $payload
-     * @return Collection<string,mixed>
-     *
-     * @throws ChatwootApiException
-     */
-    public function filter(array $payload): Collection
-    {
-        return $this->httpPost($this->accountPath('conversations/filter'), $payload);
     }
 }

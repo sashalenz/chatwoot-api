@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\ContactData;
 
 it('creates a contact at the account-scoped path with the api_access_token header', function (): void {
     Http::fake([
@@ -23,9 +24,9 @@ it('creates a contact at the account-scoped path with the api_access_token heade
         'custom_attributes' => ['client_id' => 42],
     ]);
 
-    expect($result->get('payload'))->toHaveKey('contact')
-        ->and(data_get($result, 'payload.contact.id'))->toBe(7)
-        ->and(data_get($result, 'payload.contact_inbox.source_id'))->toBe('src-abc');
+    expect($result->id)->toBe(7)
+        ->and($result->name)->toBe('Petro')
+        ->and($result->sourceId)->toBe('src-abc');
 
     Http::assertSent(function (Request $request): bool {
         return $request->method() === 'POST'
@@ -44,7 +45,7 @@ it('creates a contact inbox and exposes the source_id', function (): void {
 
     $result = ChatwootApi::contacts()->createInbox(7, 1);
 
-    expect($result->get('source_id'))->toBe('src-xyz');
+    expect($result->sourceId)->toBe('src-xyz');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7/contact_inboxes'
@@ -60,20 +61,34 @@ it('updates a contact via PUT', function (): void {
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7');
 });
 
-it('lists contacts', function (): void {
-    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+it('lists contacts as a paginated set of typed DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        'meta' => ['count' => 1, 'current_page' => 2],
+        'payload' => [['id' => 7, 'name' => 'Petro', 'phone_number' => '+380501234567']],
+    ], 200)]);
 
-    ChatwootApi::contacts()->list(['page' => 2]);
+    $result = ChatwootApi::contacts()->list(['page' => 2]);
+
+    expect($result->count())->toBe(1)
+        ->and($result->currentPage())->toBe(2)
+        ->and($result->totalCount())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(ContactData::class)
+        ->and($result->payload[0]->name)->toBe('Petro')
+        ->and($result->payload[0]->phoneNumber)->toBe('+380501234567');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && str_starts_with($request->url(), 'https://chatwoot.test/api/v1/accounts/1/contacts?')
         && $request['page'] === 2);
 });
 
-it('fetches a single contact', function (): void {
-    Http::fake(['*' => Http::response(['payload' => ['id' => 7]], 200)]);
+it('fetches a single contact as a DTO', function (): void {
+    Http::fake(['*' => Http::response(['payload' => ['id' => 7, 'name' => 'Petro']], 200)]);
 
-    ChatwootApi::contacts()->get(7);
+    $result = ChatwootApi::contacts()->get(7);
+
+    expect($result)->toBeInstanceOf(ContactData::class)
+        ->and($result->id)->toBe(7)
+        ->and($result->name)->toBe('Petro');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7');
@@ -98,10 +113,10 @@ it('filters contacts via POST', function (): void {
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/filter');
 });
 
-it('deletes a contact', function (): void {
+it('deletes a contact and returns true', function (): void {
     Http::fake(['*' => Http::response([], 200)]);
 
-    ChatwootApi::contacts()->delete(7);
+    expect(ChatwootApi::contacts()->delete(7))->toBeTrue();
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/contacts/7');

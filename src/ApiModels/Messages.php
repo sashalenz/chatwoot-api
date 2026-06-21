@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\MessageData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -22,17 +23,18 @@ final class Messages extends BaseModel
      *   - `outgoing` — an agent/bot reply.
      *
      * @param  array<string,mixed>  $extra  optional: ['private'=>true, 'content_type'=>'text', 'content_attributes'=>[…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(int $conversationId, string $content, string $messageType = 'incoming', array $extra = []): Collection
+    public function create(int $conversationId, string $content, string $messageType = 'incoming', array $extra = []): MessageData
     {
-        return $this->httpPost($this->accountPath("conversations/{$conversationId}/messages"), [
-            'content' => $content,
-            'message_type' => $messageType,
-            ...$extra,
-        ]);
+        return MessageData::from(
+            $this->httpPost($this->accountPath("conversations/{$conversationId}/messages"), [
+                'content' => $content,
+                'message_type' => $messageType,
+                ...$extra,
+            ])->all(),
+        );
     }
 
     /**
@@ -40,24 +42,27 @@ final class Messages extends BaseModel
      * `before`/`after` message ids).
      *
      * @param  array<string,mixed>  $query  optional: ['before'=>…, 'after'=>…]
-     * @return Collection<string,mixed>
+     * @return Paginated<MessageData>
      *
      * @throws ChatwootApiException
      */
-    public function list(int $conversationId, array $query = []): Collection
+    public function list(int $conversationId, array $query = []): Paginated
     {
-        return $this->httpGet($this->accountPath("conversations/{$conversationId}/messages"), $query);
+        return Paginated::fromResponse(
+            $this->httpGet($this->accountPath("conversations/{$conversationId}/messages"), $query)->all(),
+            MessageData::class,
+        );
     }
 
     /**
-     * Delete a message from a conversation.
-     *
-     * @return Collection<string,mixed>
+     * Delete a message from a conversation. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $conversationId, int $messageId): Collection
+    public function delete(int $conversationId, int $messageId): bool
     {
-        return $this->httpDelete($this->accountPath("conversations/{$conversationId}/messages/{$messageId}"));
+        $this->httpDelete($this->accountPath("conversations/{$conversationId}/messages/{$messageId}"));
+
+        return true;
     }
 }

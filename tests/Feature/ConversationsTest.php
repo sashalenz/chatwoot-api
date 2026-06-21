@@ -5,13 +5,16 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\ConversationData;
+use Sashalenz\ChatwootApi\Data\MessageData;
 
 it('creates a conversation from a source_id and inbox_id', function (): void {
     Http::fake(['*' => Http::response(['id' => 99, 'status' => 'open'], 200)]);
 
     $result = ChatwootApi::conversations()->create('src-abc', 1, ['status' => 'open']);
 
-    expect($result->get('id'))->toBe(99);
+    expect($result->id)->toBe(99)
+        ->and($result->status)->toBe('open');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations'
@@ -42,10 +45,19 @@ it('updates a conversation via PATCH', function (): void {
         && $request['priority'] === 'high');
 });
 
-it('fetches a single conversation via GET', function (): void {
-    Http::fake(['*' => Http::response(['id' => 99, 'status' => 'open'], 200)]);
+it('fetches a single conversation via GET with embedded messages as DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 99,
+        'status' => 'open',
+        'messages' => [['id' => 1, 'content' => 'Привіт', 'message_type' => 0]],
+    ], 200)]);
 
-    ChatwootApi::conversations()->show(99);
+    $result = ChatwootApi::conversations()->show(99);
+
+    expect($result)->toBeInstanceOf(ConversationData::class)
+        ->and($result->id)->toBe(99)
+        ->and($result->messages[0])->toBeInstanceOf(MessageData::class)
+        ->and($result->messages[0]->content)->toBe('Привіт');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99');
@@ -131,10 +143,16 @@ it('fetches conversation counts via meta', function (): void {
         && $request['status'] === 'open');
 });
 
-it('filters conversations via POST', function (): void {
-    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+it('filters conversations via POST and unwraps the data envelope', function (): void {
+    Http::fake(['*' => Http::response([
+        'data' => ['meta' => ['all_count' => 1], 'payload' => [['id' => 42, 'status' => 'open']]],
+    ], 200)]);
 
-    ChatwootApi::conversations()->filter(['payload' => []]);
+    $result = ChatwootApi::conversations()->filter(['payload' => []]);
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(ConversationData::class)
+        ->and($result->payload[0]->id)->toBe(42);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/filter');

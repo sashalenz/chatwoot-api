@@ -11,7 +11,8 @@ it('creates an incoming message (inbound mirror)', function (): void {
 
     $result = ChatwootApi::messages()->create(99, 'Привіт', 'incoming');
 
-    expect($result->get('id'))->toBe(555);
+    expect($result->id)->toBe(555)
+        ->and($result->messageType)->toBe(0);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/messages'
@@ -41,7 +42,7 @@ it('lists messages of a conversation', function (): void {
 it('deletes a message', function (): void {
     Http::fake(['*' => Http::response(['id' => 555, 'content' => 'deleted'], 200)]);
 
-    ChatwootApi::messages()->delete(99, 555);
+    expect(ChatwootApi::messages()->delete(99, 555))->toBeTrue();
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'DELETE'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/conversations/99/messages/555');
