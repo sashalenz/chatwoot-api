@@ -46,6 +46,9 @@ CHATWOOT_API_TOKEN=your-api-access-token
 # Client API (API-channel inbound bridge)
 CHATWOOT_INBOX_IDENTIFIER=your-inbox-identifier
 CHATWOOT_HMAC_KEY=your-hmac-key   # optional, only if the inbox enables identity validation
+
+# Platform API (installation provisioning) — only if you use platform* resources
+CHATWOOT_PLATFORM_TOKEN=your-platform-app-token
 ```
 
 | Key | Env | Description |
@@ -55,11 +58,13 @@ CHATWOOT_HMAC_KEY=your-hmac-key   # optional, only if the inbox enables identity
 | `token` | `CHATWOOT_API_TOKEN` | **Application API** access token sent in the `api_access_token` header. Can be overridden per call. |
 | `identifier` | `CHATWOOT_INBOX_IDENTIFIER` | **Client API** inbox identifier (from the API-channel inbox settings). Auth for the public bridge surface — no agent token needed. |
 | `hmac_key` | `CHATWOOT_HMAC_KEY` | Optional HMAC key for Client API identity validation. |
+| `platform_token` | `CHATWOOT_PLATFORM_TOKEN` | **Platform API** app token. Sent in the same `api_access_token` header, but a different token than the Application one. Can be overridden per call. |
 
-### Two API families
+### Three API families
 
-- **Application API** (`contacts()`, `conversations()`, `messages()`) — the agent/system side. Authenticates with an agent/user **access token** and acts within an account.
+- **Application API** (`contacts()`, `conversations()`, `messages()`, …) — the agent/system side. Authenticates with an agent/user **access token** and acts within an account.
 - **Client API** (`client()`) — the public **API-channel** surface. Authenticates with the **inbox identifier** (no agent token) and is the canonical path for an integration that pushes a customer's messages *into* Chatwoot as `incoming`.
+- **Platform API** (`platformAccounts()`, `platformAgentBots()`, `platformUsers()`) — installation-level provisioning of accounts, users and bots. Authenticates with the **platform app token** and is not account-scoped.
 
 ## Usage
 
@@ -186,6 +191,9 @@ ChatwootApi::messages()
 | `integrations()` | `apps()` / `createHook` / `updateHook` / `deleteHook` | List integration apps and manage hooks. |
 | `reports()` | `account` / `summary` / `conversations` / `firstResponseTimeDistribution` / `inboxLabelMatrix` / `outgoingMessagesCount` | Metrics & reports (v2 endpoints). |
 | `helpCenter()` | `listPortals` / `createPortal` / `updatePortal` / `createCategory` / `createArticle` | Manage Help Center portals, categories & articles. |
+| `platformAccounts()` | `create` / `get` / `update` / `delete` / `users` / `createUser` / `deleteUser` | **Platform API** — provision accounts and account-user links. |
+| `platformAgentBots()` | `list` / `get` / `create` / `update` / `delete` | **Platform API** — installation-wide agent bots. |
+| `platformUsers()` | `create` / `get` / `update` / `delete` / `login` | **Platform API** — provision users; `login` returns an SSO link. |
 | `client()` | `inbox()` | Read inbox info (health check). |
 | | `createContact(array $attributes)` | Upsert a contact → returns `source_id`. |
 | | `getContact(string $sourceId)` | Fetch a contact by `source_id`. |

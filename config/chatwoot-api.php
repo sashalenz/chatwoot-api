@@ -37,4 +37,13 @@ return [
      | Override per call via ->token($token).
      */
     'token' => env('CHATWOOT_API_TOKEN'),
+
+    /*
+     | Platform App access token. Used only by the Platform API resources
+     | (`platformAccounts()`, `platformAgentBots()`, `platformUsers()`) which
+     | provision accounts, users and agent bots at the installation level. Sent
+     | in the same `api_access_token` header, but is a different token than the
+     | Application API one above. Override per call via ->token($token).
+     */
+    'platform_token' => env('CHATWOOT_PLATFORM_TOKEN'),
 ];

@@ -40,14 +40,24 @@ abstract class BaseModel
     }
 
     /**
+     * Config key the access token is read from. Application/Client resources use
+     * the default; Platform API resources override this to the platform token.
+     */
+    protected function tokenConfigKey(): string
+    {
+        return 'chatwoot-api.token';
+    }
+
+    /**
      * @throws ChatwootApiException
      */
     protected function resolveToken(): string
     {
-        $token = $this->token ?? config('chatwoot-api.token');
+        $key = $this->tokenConfigKey();
+        $token = $this->token ?? config($key);
 
         if (empty($token) || ! is_string($token)) {
-            throw new ChatwootApiException('Chatwoot API token is not configured (config chatwoot-api.token).');
+            throw new ChatwootApiException("Chatwoot API token is not configured (config {$key}).");
         }
 
         return $token;

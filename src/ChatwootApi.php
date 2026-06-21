@@ -18,6 +18,9 @@ use Sashalenz\ChatwootApi\ApiModels\Inboxes;
 use Sashalenz\ChatwootApi\ApiModels\Integrations;
 use Sashalenz\ChatwootApi\ApiModels\Labels;
 use Sashalenz\ChatwootApi\ApiModels\Messages;
+use Sashalenz\ChatwootApi\ApiModels\Platform\PlatformAccounts;
+use Sashalenz\ChatwootApi\ApiModels\Platform\PlatformAgentBots;
+use Sashalenz\ChatwootApi\ApiModels\Platform\PlatformUsers;
 use Sashalenz\ChatwootApi\ApiModels\Profile;
 use Sashalenz\ChatwootApi\ApiModels\PublicClient;
 use Sashalenz\ChatwootApi\ApiModels\Reports;
@@ -124,6 +127,31 @@ class ChatwootApi
     public static function helpCenter(): HelpCenter
     {
         return new HelpCenter;
+    }
+
+    /**
+     * Platform API — Accounts. Authenticates with the platform app token
+     * (config `chatwoot-api.platform_token`), not the Application API token.
+     */
+    public static function platformAccounts(): PlatformAccounts
+    {
+        return new PlatformAccounts;
+    }
+
+    /**
+     * Platform API — Agent Bots (installation-wide).
+     */
+    public static function platformAgentBots(): PlatformAgentBots
+    {
+        return new PlatformAgentBots;
+    }
+
+    /**
+     * Platform API — Users.
+     */
+    public static function platformUsers(): PlatformUsers
+    {
+        return new PlatformUsers;
     }
 
     /**
