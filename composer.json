@@ -1,0 +1,70 @@
+{
+    "name": "sashalenz/chatwoot-api",
+    "description": "Chatwoot Application API SDK for Laravel — thin REST client for contacts, conversations and messages (API-channel bridge).",
+    "keywords": [
+        "sashalenz",
+        "chatwoot",
+        "chatwoot-api",
+        "laravel",
+        "omnichannel",
+        "inbox"
+    ],
+    "homepage": "https://github.com/sashalenz/chatwoot-api",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Oleksandr Petrovskyi",
+            "email": "sashalenz@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/config": "^11.0||^12.0||^13.0",
+        "illuminate/contracts": "^11.0||^12.0||^13.0",
+        "illuminate/http": "^11.0||^12.0||^13.0",
+        "illuminate/support": "^11.0||^12.0||^13.0",
+        "spatie/laravel-data": "^4.4",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^9.0||^10.0||^11.0",
+        "pestphp/pest": "^3.0||^4.0",
+        "pestphp/pest-plugin-arch": "^3.0||^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0||^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sashalenz\\ChatwootApi\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sashalenz\\ChatwootApi\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "vendor/bin/pint",
+        "format-test": "vendor/bin/pint --test"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sashalenz\\ChatwootApi\\ChatwootApiServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
