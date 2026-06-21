@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\AgentData;
 
 it('lists teams', function (): void {
     Http::fake(['*' => Http::response([], 200)]);
@@ -52,10 +53,16 @@ it('deletes a team', function (): void {
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/teams/2');
 });
 
-it('lists team members', function (): void {
-    Http::fake(['*' => Http::response([], 200)]);
+it('lists team members as agent DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        ['id' => 5, 'name' => 'Petro', 'role' => 'agent'],
+    ], 200)]);
 
-    ChatwootApi::teams()->members(2);
+    $result = ChatwootApi::teams()->members(2);
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(AgentData::class)
+        ->and($result->payload[0]->name)->toBe('Petro');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/teams/2/team_members');

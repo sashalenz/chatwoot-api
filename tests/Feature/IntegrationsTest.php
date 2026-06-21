@@ -5,11 +5,18 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\IntegrationAppData;
 
-it('lists integration apps', function (): void {
-    Http::fake(['*' => Http::response([], 200)]);
+it('lists integration apps as typed DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        'payload' => [['id' => 'dialogflow', 'name' => 'Dialogflow', 'enabled' => true]],
+    ], 200)]);
 
-    ChatwootApi::integrations()->apps();
+    $result = ChatwootApi::integrations()->apps();
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(IntegrationAppData::class)
+        ->and($result->payload[0]->name)->toBe('Dialogflow');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/integrations/apps');

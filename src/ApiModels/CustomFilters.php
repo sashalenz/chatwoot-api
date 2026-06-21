@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\CustomFilterData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -16,54 +17,52 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class CustomFilters extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<CustomFilterData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('custom_filters'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('custom_filters'))->all(), CustomFilterData::class);
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $customFilterId): Collection
+    public function get(int $customFilterId): CustomFilterData
     {
-        return $this->httpGet($this->accountPath("custom_filters/{$customFilterId}"));
+        return CustomFilterData::from($this->httpGet($this->accountPath("custom_filters/{$customFilterId}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'type'=>'conversation|contact|report', 'query'=>[…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): CustomFilterData
     {
-        return $this->httpPost($this->accountPath('custom_filters'), $attributes);
+        return CustomFilterData::from($this->httpPost($this->accountPath('custom_filters'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $customFilterId, array $attributes): Collection
+    public function update(int $customFilterId, array $attributes): CustomFilterData
     {
-        return $this->httpPatch($this->accountPath("custom_filters/{$customFilterId}"), $attributes);
+        return CustomFilterData::from($this->httpPatch($this->accountPath("custom_filters/{$customFilterId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a custom filter. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $customFilterId): Collection
+    public function delete(int $customFilterId): bool
     {
-        return $this->httpDelete($this->accountPath("custom_filters/{$customFilterId}"));
+        $this->httpDelete($this->accountPath("custom_filters/{$customFilterId}"));
+
+        return true;
     }
 }

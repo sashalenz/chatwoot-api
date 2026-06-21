@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\CannedResponseData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,44 +16,44 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class CannedResponses extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<CannedResponseData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('canned_responses'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('canned_responses'))->all(), CannedResponseData::class);
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['short_code'=>'hi', 'content'=>'Hello 👋']
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): CannedResponseData
     {
-        return $this->httpPost($this->accountPath('canned_responses'), $attributes);
+        return CannedResponseData::from($this->httpPost($this->accountPath('canned_responses'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $cannedResponseId, array $attributes): Collection
+    public function update(int $cannedResponseId, array $attributes): CannedResponseData
     {
-        return $this->httpPatch($this->accountPath("canned_responses/{$cannedResponseId}"), $attributes);
+        return CannedResponseData::from($this->httpPatch($this->accountPath("canned_responses/{$cannedResponseId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a canned response. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $cannedResponseId): Collection
+    public function delete(int $cannedResponseId): bool
     {
-        return $this->httpDelete($this->accountPath("canned_responses/{$cannedResponseId}"));
+        $this->httpDelete($this->accountPath("canned_responses/{$cannedResponseId}"));
+
+        return true;
     }
 }

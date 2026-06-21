@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\ArticleData;
+use Sashalenz\ChatwootApi\Data\CategoryData;
+use Sashalenz\ChatwootApi\Data\Paginated;
+use Sashalenz\ChatwootApi\Data\PortalData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -17,64 +20,60 @@ final class HelpCenter extends BaseModel
     /**
      * List portals.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<PortalData>
      *
      * @throws ChatwootApiException
      */
-    public function listPortals(): Collection
+    public function listPortals(): Paginated
     {
-        return $this->httpGet($this->accountPath('portals'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('portals'))->all(), PortalData::class);
     }
 
     /**
      * Create a portal.
      *
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'slug'=>…, 'custom_domain'=>…]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createPortal(array $attributes): Collection
+    public function createPortal(array $attributes): PortalData
     {
-        return $this->httpPost($this->accountPath('portals'), $attributes);
+        return PortalData::from($this->httpPost($this->accountPath('portals'), $attributes)->all());
     }
 
     /**
      * Update a portal.
      *
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function updatePortal(int $portalId, array $attributes): Collection
+    public function updatePortal(int $portalId, array $attributes): PortalData
     {
-        return $this->httpPatch($this->accountPath("portals/{$portalId}"), $attributes);
+        return PortalData::from($this->httpPatch($this->accountPath("portals/{$portalId}"), $attributes)->all());
     }
 
     /**
      * Create a category within a portal.
      *
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'slug'=>…, 'locale'=>'en']
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createCategory(int $portalId, array $attributes): Collection
+    public function createCategory(int $portalId, array $attributes): CategoryData
     {
-        return $this->httpPost($this->accountPath("portals/{$portalId}/categories"), $attributes);
+        return CategoryData::from($this->httpPost($this->accountPath("portals/{$portalId}/categories"), $attributes)->all());
     }
 
     /**
      * Create an article within a portal.
      *
      * @param  array<string,mixed>  $attributes  e.g. ['title'=>…, 'content'=>…, 'category_id'=>…, 'author_id'=>…]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createArticle(int $portalId, array $attributes): Collection
+    public function createArticle(int $portalId, array $attributes): ArticleData
     {
-        return $this->httpPost($this->accountPath("portals/{$portalId}/articles"), $attributes);
+        return ArticleData::from($this->httpPost($this->accountPath("portals/{$portalId}/articles"), $attributes)->all());
     }
 }

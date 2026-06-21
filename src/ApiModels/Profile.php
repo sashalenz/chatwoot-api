@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\ProfileData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -18,25 +18,22 @@ final class Profile extends BaseModel
     /**
      * Fetch the authenticated user's profile.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(): Collection
+    public function get(): ProfileData
     {
-        return $this->httpGet('api/v1/profile');
+        return ProfileData::from($this->httpGet('api/v1/profile')->all());
     }
 
     /**
      * Update the authenticated user's profile.
      *
      * @param  array<string,mixed>  $profile  e.g. ['display_name'=>…, 'availability'=>'online|busy|offline']
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(array $profile): Collection
+    public function update(array $profile): ProfileData
     {
-        return $this->httpPut('api/v1/profile', ['profile' => $profile]);
+        return ProfileData::from($this->httpPut('api/v1/profile', ['profile' => $profile])->all());
     }
 }

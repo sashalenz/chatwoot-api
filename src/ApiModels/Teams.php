@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Sashalenz\ChatwootApi\ApiModels;
 
 use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AgentData;
+use Sashalenz\ChatwootApi\Data\Paginated;
+use Sashalenz\ChatwootApi\Data\TeamData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,67 +18,65 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class Teams extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<TeamData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('teams'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('teams'))->all(), TeamData::class);
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $teamId): Collection
+    public function get(int $teamId): TeamData
     {
-        return $this->httpGet($this->accountPath("teams/{$teamId}"));
+        return TeamData::from($this->httpGet($this->accountPath("teams/{$teamId}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'description'=>…, 'allow_auto_assign'=>true]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): TeamData
     {
-        return $this->httpPost($this->accountPath('teams'), $attributes);
+        return TeamData::from($this->httpPost($this->accountPath('teams'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $teamId, array $attributes): Collection
+    public function update(int $teamId, array $attributes): TeamData
     {
-        return $this->httpPatch($this->accountPath("teams/{$teamId}"), $attributes);
+        return TeamData::from($this->httpPatch($this->accountPath("teams/{$teamId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a team. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $teamId): Collection
+    public function delete(int $teamId): bool
     {
-        return $this->httpDelete($this->accountPath("teams/{$teamId}"));
+        $this->httpDelete($this->accountPath("teams/{$teamId}"));
+
+        return true;
     }
 
     /**
      * List the agents on the team.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<AgentData>
      *
      * @throws ChatwootApiException
      */
-    public function members(int $teamId): Collection
+    public function members(int $teamId): Paginated
     {
-        return $this->httpGet($this->accountPath("teams/{$teamId}/team_members"));
+        return Paginated::fromResponse($this->httpGet($this->accountPath("teams/{$teamId}/team_members"))->all(), AgentData::class);
     }
 
     /**
@@ -105,15 +106,16 @@ final class Teams extends BaseModel
     }
 
     /**
-     * Remove agents from the team.
+     * Remove agents from the team. Returns true on success.
      *
      * @param  array<int,int>  $userIds
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function removeMembers(int $teamId, array $userIds): Collection
+    public function removeMembers(int $teamId, array $userIds): bool
     {
-        return $this->httpDelete($this->accountPath("teams/{$teamId}/team_members"), ['user_ids' => $userIds]);
+        $this->httpDelete($this->accountPath("teams/{$teamId}/team_members"), ['user_ids' => $userIds]);
+
+        return true;
     }
 }

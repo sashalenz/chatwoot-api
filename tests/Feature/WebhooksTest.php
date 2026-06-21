@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\WebhookData;
 
 it('lists webhooks', function (): void {
     Http::fake(['*' => Http::response(['payload' => []], 200)]);
@@ -18,10 +19,13 @@ it('lists webhooks', function (): void {
 it('creates a webhook', function (): void {
     Http::fake(['*' => Http::response(['id' => 12], 200)]);
 
-    ChatwootApi::webhooks()->create([
+    $result = ChatwootApi::webhooks()->create([
         'url' => 'https://x/hook',
         'subscriptions' => ['message_created'],
     ]);
+
+    expect($result)->toBeInstanceOf(WebhookData::class)
+        ->and($result->id)->toBe(12);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/webhooks'

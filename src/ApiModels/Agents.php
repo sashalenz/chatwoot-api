@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AgentData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,44 +16,44 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class Agents extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<AgentData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('agents'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('agents'))->all(), AgentData::class);
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['user_id'=>…, 'role'=>'agent|administrator', 'availability'=>…]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): AgentData
     {
-        return $this->httpPost($this->accountPath('agents'), $attributes);
+        return AgentData::from($this->httpPost($this->accountPath('agents'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $agentId, array $attributes): Collection
+    public function update(int $agentId, array $attributes): AgentData
     {
-        return $this->httpPatch($this->accountPath("agents/{$agentId}"), $attributes);
+        return AgentData::from($this->httpPatch($this->accountPath("agents/{$agentId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Remove an agent from the account. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $agentId): Collection
+    public function delete(int $agentId): bool
     {
-        return $this->httpDelete($this->accountPath("agents/{$agentId}"));
+        $this->httpDelete($this->accountPath("agents/{$agentId}"));
+
+        return true;
     }
 }

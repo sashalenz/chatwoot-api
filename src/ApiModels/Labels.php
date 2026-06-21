@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\LabelData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,54 +16,52 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class Labels extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<LabelData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('labels'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('labels'))->all(), LabelData::class);
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $labelId): Collection
+    public function get(int $labelId): LabelData
     {
-        return $this->httpGet($this->accountPath("labels/{$labelId}"));
+        return LabelData::from($this->httpGet($this->accountPath("labels/{$labelId}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['title'=>…, 'description'=>…, 'color'=>'#FF0000', 'show_on_sidebar'=>true]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): LabelData
     {
-        return $this->httpPost($this->accountPath('labels'), $attributes);
+        return LabelData::from($this->httpPost($this->accountPath('labels'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $labelId, array $attributes): Collection
+    public function update(int $labelId, array $attributes): LabelData
     {
-        return $this->httpPatch($this->accountPath("labels/{$labelId}"), $attributes);
+        return LabelData::from($this->httpPatch($this->accountPath("labels/{$labelId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a label. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $labelId): Collection
+    public function delete(int $labelId): bool
     {
-        return $this->httpDelete($this->accountPath("labels/{$labelId}"));
+        $this->httpDelete($this->accountPath("labels/{$labelId}"));
+
+        return true;
     }
 }

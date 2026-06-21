@@ -5,11 +5,18 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\PortalData;
 
-it('lists portals', function (): void {
-    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+it('lists portals as typed DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        'payload' => [['id' => 1, 'name' => 'Docs', 'slug' => 'docs']],
+    ], 200)]);
 
-    ChatwootApi::helpCenter()->listPortals();
+    $result = ChatwootApi::helpCenter()->listPortals();
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(PortalData::class)
+        ->and($result->payload[0]->slug)->toBe('docs');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/portals');

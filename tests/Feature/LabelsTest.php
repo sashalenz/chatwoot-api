@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\LabelData;
 
 it('lists labels', function (): void {
     Http::fake(['*' => Http::response(['payload' => []], 200)]);
@@ -27,7 +28,10 @@ it('fetches a label', function (): void {
 it('creates a label', function (): void {
     Http::fake(['*' => Http::response(['id' => 4], 200)]);
 
-    ChatwootApi::labels()->create(['title' => 'vip', 'color' => '#FF0000']);
+    $result = ChatwootApi::labels()->create(['title' => 'vip', 'color' => '#FF0000']);
+
+    expect($result)->toBeInstanceOf(LabelData::class)
+        ->and($result->id)->toBe(4);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/labels'

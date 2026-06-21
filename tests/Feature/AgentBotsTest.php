@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\AgentBotData;
 
 it('lists agent bots', function (): void {
     Http::fake(['*' => Http::response([], 200)]);
@@ -18,7 +19,10 @@ it('lists agent bots', function (): void {
 it('fetches an agent bot', function (): void {
     Http::fake(['*' => Http::response(['id' => 3], 200)]);
 
-    ChatwootApi::agentBots()->get(3);
+    $result = ChatwootApi::agentBots()->get(3);
+
+    expect($result)->toBeInstanceOf(AgentBotData::class)
+        ->and($result->id)->toBe(3);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/agent_bots/3');

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AutomationRuleData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,54 +16,58 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class AutomationRules extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<AutomationRuleData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('automation_rules'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('automation_rules'))->all(), AutomationRuleData::class);
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $automationRuleId): Collection
+    public function get(int $automationRuleId): AutomationRuleData
     {
-        return $this->httpGet($this->accountPath("automation_rules/{$automationRuleId}"));
+        $resp = $this->httpGet($this->accountPath("automation_rules/{$automationRuleId}"))->all();
+
+        return AutomationRuleData::from($resp['payload'] ?? $resp);
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'event_name'=>'conversation_created', 'active'=>true, 'conditions'=>[…], 'actions'=>[…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): AutomationRuleData
     {
-        return $this->httpPost($this->accountPath('automation_rules'), $attributes);
+        $resp = $this->httpPost($this->accountPath('automation_rules'), $attributes)->all();
+
+        return AutomationRuleData::from($resp['payload'] ?? $resp);
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $automationRuleId, array $attributes): Collection
+    public function update(int $automationRuleId, array $attributes): AutomationRuleData
     {
-        return $this->httpPatch($this->accountPath("automation_rules/{$automationRuleId}"), $attributes);
+        $resp = $this->httpPatch($this->accountPath("automation_rules/{$automationRuleId}"), $attributes)->all();
+
+        return AutomationRuleData::from($resp['payload'] ?? $resp);
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete an automation rule. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $automationRuleId): Collection
+    public function delete(int $automationRuleId): bool
     {
-        return $this->httpDelete($this->accountPath("automation_rules/{$automationRuleId}"));
+        $this->httpDelete($this->accountPath("automation_rules/{$automationRuleId}"));
+
+        return true;
     }
 }

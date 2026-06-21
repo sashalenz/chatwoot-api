@@ -5,20 +5,31 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\InboxData;
 
-it('lists inboxes', function (): void {
-    Http::fake(['*' => Http::response(['payload' => []], 200)]);
+it('lists inboxes from a payload envelope as typed DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        'payload' => [['id' => 1, 'name' => 'API', 'channel_type' => 'Channel::Api']],
+    ], 200)]);
 
-    ChatwootApi::inboxes()->list();
+    $result = ChatwootApi::inboxes()->list();
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(InboxData::class)
+        ->and($result->payload[0]->name)->toBe('API')
+        ->and($result->payload[0]->channelType)->toBe('Channel::Api');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/inboxes');
 });
 
-it('fetches a single inbox', function (): void {
-    Http::fake(['*' => Http::response(['id' => 1], 200)]);
+it('fetches a single inbox as a DTO', function (): void {
+    Http::fake(['*' => Http::response(['id' => 1, 'name' => 'API'], 200)]);
 
-    ChatwootApi::inboxes()->get(1);
+    $result = ChatwootApi::inboxes()->get(1);
+
+    expect($result)->toBeInstanceOf(InboxData::class)
+        ->and($result->id)->toBe(1);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/inboxes/1');

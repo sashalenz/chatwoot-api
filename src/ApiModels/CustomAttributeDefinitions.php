@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\CustomAttributeDefinitionData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -16,54 +17,52 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class CustomAttributeDefinitions extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<CustomAttributeDefinitionData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('custom_attribute_definitions'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('custom_attribute_definitions'))->all(), CustomAttributeDefinitionData::class);
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $id): Collection
+    public function get(int $id): CustomAttributeDefinitionData
     {
-        return $this->httpGet($this->accountPath("custom_attribute_definitions/{$id}"));
+        return CustomAttributeDefinitionData::from($this->httpGet($this->accountPath("custom_attribute_definitions/{$id}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['attribute_display_name'=>…, 'attribute_key'=>…, 'attribute_model'=>'conversation_attribute|contact_attribute', 'attribute_display_type'=>'text|number|…']
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): CustomAttributeDefinitionData
     {
-        return $this->httpPost($this->accountPath('custom_attribute_definitions'), $attributes);
+        return CustomAttributeDefinitionData::from($this->httpPost($this->accountPath('custom_attribute_definitions'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $id, array $attributes): Collection
+    public function update(int $id, array $attributes): CustomAttributeDefinitionData
     {
-        return $this->httpPatch($this->accountPath("custom_attribute_definitions/{$id}"), $attributes);
+        return CustomAttributeDefinitionData::from($this->httpPatch($this->accountPath("custom_attribute_definitions/{$id}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a custom attribute definition. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $id): Collection
+    public function delete(int $id): bool
     {
-        return $this->httpDelete($this->accountPath("custom_attribute_definitions/{$id}"));
+        $this->httpDelete($this->accountPath("custom_attribute_definitions/{$id}"));
+
+        return true;
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AccountData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -17,26 +17,23 @@ final class Account extends BaseModel
     /**
      * Fetch the account details.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(): Collection
+    public function get(): AccountData
     {
-        return $this->httpGet($this->selfPath());
+        return AccountData::from($this->httpGet($this->selfPath())->all());
     }
 
     /**
      * Update the account.
      *
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'locale'=>…, 'auto_resolve_duration'=>…]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(array $attributes): Collection
+    public function update(array $attributes): AccountData
     {
-        return $this->httpPatch($this->selfPath(), $attributes);
+        return AccountData::from($this->httpPatch($this->selfPath(), $attributes)->all());
     }
 
     /**

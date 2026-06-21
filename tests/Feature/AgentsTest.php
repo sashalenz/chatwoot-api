@@ -5,11 +5,19 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\AgentData;
 
-it('lists agents', function (): void {
-    Http::fake(['*' => Http::response([], 200)]);
+it('lists agents from a bare array as typed DTOs', function (): void {
+    Http::fake(['*' => Http::response([
+        ['id' => 5, 'name' => 'Petro', 'available_name' => 'Petro P', 'role' => 'agent'],
+    ], 200)]);
 
-    ChatwootApi::agents()->list();
+    $result = ChatwootApi::agents()->list();
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(AgentData::class)
+        ->and($result->payload[0]->name)->toBe('Petro')
+        ->and($result->payload[0]->availableName)->toBe('Petro P');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/api/v1/accounts/1/agents');

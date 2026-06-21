@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\Paginated;
+use Sashalenz\ChatwootApi\Data\WebhookData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,44 +16,48 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class Webhooks extends BaseModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<WebhookData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('webhooks'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('webhooks'))->all(), WebhookData::class);
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['url'=>…, 'subscriptions'=>['conversation_created', 'message_created']]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): WebhookData
     {
-        return $this->httpPost($this->accountPath('webhooks'), $attributes);
+        $resp = $this->httpPost($this->accountPath('webhooks'), $attributes)->all();
+
+        return WebhookData::from($resp['payload']['webhook'] ?? $resp['payload'] ?? $resp);
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $webhookId, array $attributes): Collection
+    public function update(int $webhookId, array $attributes): WebhookData
     {
-        return $this->httpPatch($this->accountPath("webhooks/{$webhookId}"), $attributes);
+        $resp = $this->httpPatch($this->accountPath("webhooks/{$webhookId}"), $attributes)->all();
+
+        return WebhookData::from($resp['payload']['webhook'] ?? $resp['payload'] ?? $resp);
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a webhook. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $webhookId): Collection
+    public function delete(int $webhookId): bool
     {
-        return $this->httpDelete($this->accountPath("webhooks/{$webhookId}"));
+        $this->httpDelete($this->accountPath("webhooks/{$webhookId}"));
+
+        return true;
     }
 }

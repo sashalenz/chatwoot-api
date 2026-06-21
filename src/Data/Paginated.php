@@ -29,20 +29,30 @@ final class Paginated extends Data
      *
      * @template TData of Data
      *
-     * @param  array<string, mixed>  $response
+     * @param  array<array-key, mixed>  $response
      * @param  class-string<TData>  $dataClass
      * @return self<TData>
      */
     public static function fromResponse(array $response, string $dataClass): self
     {
-        /** @var array<int, array<string, mixed>> $items */
-        $items = $response['payload'] ?? [];
-
-        /** @var array<string, mixed> $meta */
-        $meta = $response['meta'] ?? [];
+        // Chatwoot list endpoints come in two shapes: `{payload: [...], meta: {...}}`
+        // and a bare top-level array. Conversation lists wrap one level deeper in
+        // `data` — callers unwrap that before handing the inner block here.
+        if (array_key_exists('payload', $response)) {
+            /** @var array<int, mixed> $items */
+            $items = is_array($response['payload']) ? $response['payload'] : [];
+            /** @var array<string, mixed> $meta */
+            $meta = is_array($response['meta'] ?? null) ? $response['meta'] : [];
+        } elseif (array_is_list($response)) {
+            $items = $response;
+            $meta = [];
+        } else {
+            $items = [];
+            $meta = $response;
+        }
 
         return new self(
-            payload: array_map(static fn (array $item): Data => $dataClass::from($item), array_values($items)),
+            payload: array_map(static fn (mixed $item): Data => $dataClass::from($item), array_values($items)),
             meta: $meta,
         );
     }

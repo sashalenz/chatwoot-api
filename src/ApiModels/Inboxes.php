@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Sashalenz\ChatwootApi\ApiModels;
 
 use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AgentBotData;
+use Sashalenz\ChatwootApi\Data\AgentData;
+use Sashalenz\ChatwootApi\Data\InboxData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -17,63 +21,57 @@ final class Inboxes extends BaseModel
     /**
      * List inboxes in the account.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<InboxData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->accountPath('inboxes'));
+        return Paginated::fromResponse($this->httpGet($this->accountPath('inboxes'))->all(), InboxData::class);
     }
 
     /**
      * Fetch a single inbox.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $inboxId): Collection
+    public function get(int $inboxId): InboxData
     {
-        return $this->httpGet($this->accountPath("inboxes/{$inboxId}"));
+        return InboxData::from($this->httpGet($this->accountPath("inboxes/{$inboxId}"))->all());
     }
 
     /**
      * Create an inbox.
      *
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'channel'=>['type'=>'api', 'webhook_url'=>…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): InboxData
     {
-        return $this->httpPost($this->accountPath('inboxes'), $attributes);
+        return InboxData::from($this->httpPost($this->accountPath('inboxes'), $attributes)->all());
     }
 
     /**
      * Update an inbox.
      *
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $inboxId, array $attributes): Collection
+    public function update(int $inboxId, array $attributes): InboxData
     {
-        return $this->httpPatch($this->accountPath("inboxes/{$inboxId}"), $attributes);
+        return InboxData::from($this->httpPatch($this->accountPath("inboxes/{$inboxId}"), $attributes)->all());
     }
 
     /**
      * Show the agent-bot currently assigned to the inbox.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function agentBot(int $inboxId): Collection
+    public function agentBot(int $inboxId): AgentBotData
     {
-        return $this->httpGet($this->accountPath("inboxes/{$inboxId}/agent_bot"));
+        return AgentBotData::from($this->httpGet($this->accountPath("inboxes/{$inboxId}/agent_bot"))->all());
     }
 
     /**
@@ -94,13 +92,13 @@ final class Inboxes extends BaseModel
     /**
      * List the agents (members) assigned to the inbox.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<AgentData>
      *
      * @throws ChatwootApiException
      */
-    public function members(int $inboxId): Collection
+    public function members(int $inboxId): Paginated
     {
-        return $this->httpGet($this->accountPath("inbox_members/{$inboxId}"));
+        return Paginated::fromResponse($this->httpGet($this->accountPath("inbox_members/{$inboxId}"))->all(), AgentData::class);
     }
 
     /**
@@ -136,18 +134,19 @@ final class Inboxes extends BaseModel
     }
 
     /**
-     * Remove agents from the inbox.
+     * Remove agents from the inbox. Returns true on success.
      *
      * @param  array<int,int>  $userIds
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function removeMembers(int $inboxId, array $userIds): Collection
+    public function removeMembers(int $inboxId, array $userIds): bool
     {
-        return $this->httpDelete($this->accountPath('inbox_members'), [
+        $this->httpDelete($this->accountPath('inbox_members'), [
             'inbox_id' => $inboxId,
             'user_ids' => $userIds,
         ]);
+
+        return true;
     }
 }
