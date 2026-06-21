@@ -69,13 +69,14 @@ CHATWOOT_PLATFORM_TOKEN=your-platform-app-token
 ## Usage
 
 The package exposes a static entrypoint, `ChatwootApi`, with one method per resource.
-Every call returns an `Illuminate\Support\Collection` of the decoded JSON response.
+Entity methods return typed [`spatie/laravel-data`](https://github.com/spatie/laravel-data)
+DTOs (see [Typed responses](#typed-responses) below).
 
 ```php
 use Sashalenz\ChatwootApi\ChatwootApi;
 
-// Create a contact. When `inbox_id` is supplied, the payload also carries
-// a contact_inbox.source_id — the stable contact ↔ inbox key.
+// Create a contact. When `inbox_id` is supplied, the returned DTO also carries
+// `sourceId` — the stable contact ↔ inbox key.
 $contact = ChatwootApi::contacts()->create([
     'name' => 'Jane Doe',
     'phone_number' => '+15551234567',
@@ -83,20 +84,45 @@ $contact = ChatwootApi::contacts()->create([
     'custom_attributes' => ['plan' => 'pro'],
 ]);
 
-$sourceId = data_get($contact, 'payload.contact_inbox.source_id');
-
 // Open a conversation for that contact-inbox.
-$conversation = ChatwootApi::conversations()->create($sourceId, inboxId: 1);
+$conversation = ChatwootApi::conversations()->create($contact->sourceId, inboxId: 1);
 
 // Post a message into the conversation.
 ChatwootApi::messages()->create(
-    conversationId: (int) $conversation->get('id'),
+    conversationId: $conversation->id,
     content: 'Hello there!',
     messageType: 'incoming',
 );
 
 // Hand the conversation off to a human agent.
-ChatwootApi::conversations()->toggleStatus((int) $conversation->get('id'), 'open');
+ChatwootApi::conversations()->toggleStatus($conversation->id, 'open');
+```
+
+### Typed responses
+
+Entity methods return DTOs under `Sashalenz\ChatwootApi\Data\*` (e.g. `ContactData`,
+`ConversationData`, `MessageData`, `InboxData`, …) with idiomatic camelCase
+properties mapped from Chatwoot's snake_case payloads. Unknown fields are ignored,
+so the DTOs tolerate Chatwoot adding keys.
+
+- **Single-entity** methods (`create`, `get`/`show`, `update`) return the entity DTO.
+- **List** methods return `Paginated<…>` — a `payload` array of DTOs plus the raw
+  `meta`, with `count()`, `currentPage()` and `totalCount()` helpers.
+- **`delete()`** (and `removeMembers`) return `bool`.
+- A few **ad-hoc action** endpoints (`toggleStatus`, `assign`, `setCustomAttributes`,
+  `meta`, all of `reports()`, `platformUsers()->login()`) return an
+  `Illuminate\Support\Collection` of the raw response.
+
+```php
+$page = ChatwootApi::contacts()->list(['page' => 1]);
+
+$page->count();          // items on this page
+$page->currentPage();    // 1
+$page->totalCount();     // total across all pages (when Chatwoot returns it)
+
+foreach ($page->payload as $contact) {
+    echo $contact->name, ' ', $contact->phoneNumber, PHP_EOL;
+}
 ```
 
 ### Client API (API-channel inbound bridge)
@@ -113,11 +139,11 @@ $contact = ChatwootApi::client()->createContact([
     'name' => 'Petro',
     'custom_attributes' => ['client_id' => 42],
 ]);
-$sourceId = $contact->get('source_id');
+$sourceId = $contact->sourceId;
 
 // 2) Open a conversation, 3) push the incoming message.
 $conversation = ChatwootApi::client()->createConversation($sourceId);
-ChatwootApi::client()->createMessage($sourceId, (int) $conversation->get('id'), 'Привіт');
+ChatwootApi::client()->createMessage($sourceId, $conversation->id, 'Привіт');
 
 // Per-call inbox override + identity hash (when the inbox enables validation):
 ChatwootApi::client('other-inbox')->createContact([
@@ -128,7 +154,29 @@ ChatwootApi::client('other-inbox')->createContact([
 
 Agent replies flow back to you via the inbox **Webhook URL** (a `message_created`
 event with `message_type: outgoing`) — handle that in your app and deliver to the
-transport.
+transport (see [Handling webhooks](#handling-webhooks)).
+
+### Handling webhooks
+
+Chatwoot POSTs events to your configured Webhook URL. `WebhookEvent` parses the
+body and exposes the event plus typed accessors for the subject entity:
+
+```php
+use Sashalenz\ChatwootApi\Data\WebhookEvent;
+
+$event = WebhookEvent::fromArray($request->all()); // or ::fromJson($request->getContent())
+
+if ($event->isMessageCreated() && $event->isOutgoing()) {
+    $message = $event->message();           // MessageData
+    $conversation = $event->conversation(); // ConversationData|null
+    // …deliver $message->content to your transport
+}
+```
+
+`message()`, `conversation()` and `contact()` return the relevant DTO (or `null`)
+regardless of which event family arrived; `raw()` exposes the full payload for
+anything not modelled. `isIncoming()`/`isOutgoing()` normalise the message type
+across the webhook (string) and REST (integer) forms.
 
 ### Per-call account & token overrides
 

@@ -7,8 +7,9 @@ namespace Sashalenz\ChatwootApi\Data;
 use Spatie\LaravelData\Attributes\MapInputName;
 
 /**
- * A message within a conversation. `messageType` is Chatwoot's integer enum:
- * 0 = incoming, 1 = outgoing, 2 = activity, 3 = template.
+ * A message within a conversation. `messageType` is Chatwoot's enum — an
+ * integer over the REST API (0 = incoming, 1 = outgoing, 2 = activity,
+ * 3 = template) but a string (`incoming`/`outgoing`) in webhook payloads.
  */
 final class MessageData extends ChatwootData
 {
@@ -22,7 +23,7 @@ final class MessageData extends ChatwootData
         public ?int $accountId = null,
         public ?int $inboxId = null,
         public ?int $conversationId = null,
-        public ?int $messageType = null,
+        public int|string|null $messageType = null,
         public ?string $contentType = null,
         public ?string $status = null,
         #[MapInputName('private')]
