@@ -5,12 +5,17 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\AccountUserData;
+use Sashalenz\ChatwootApi\Data\PlatformAccountData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 it('creates an account with the platform token (not the app token)', function (): void {
     Http::fake(['*' => Http::response(['id' => 7], 200)]);
 
-    ChatwootApi::platformAccounts()->create(['name' => 'New Co']);
+    $result = ChatwootApi::platformAccounts()->create(['name' => 'New Co']);
+
+    expect($result)->toBeInstanceOf(PlatformAccountData::class)
+        ->and($result->id)->toBe(7);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/platform/api/v1/accounts'
@@ -57,7 +62,9 @@ it('lists account users', function (): void {
 it('links a user to an account with a role', function (): void {
     Http::fake(['*' => Http::response([], 200)]);
 
-    ChatwootApi::platformAccounts()->createUser(7, 11, 'administrator');
+    $result = ChatwootApi::platformAccounts()->createUser(7, 11, 'administrator');
+
+    expect($result)->toBeInstanceOf(AccountUserData::class);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/platform/api/v1/accounts/7/account_users'

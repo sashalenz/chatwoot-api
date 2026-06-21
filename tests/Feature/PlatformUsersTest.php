@@ -5,11 +5,15 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\ProfileData;
 
 it('creates a user', function (): void {
     Http::fake(['*' => Http::response(['id' => 11], 200)]);
 
-    ChatwootApi::platformUsers()->create(['name' => 'Petro', 'email' => 'p@x.com', 'password' => 'secret']);
+    $result = ChatwootApi::platformUsers()->create(['name' => 'Petro', 'email' => 'p@x.com', 'password' => 'secret']);
+
+    expect($result)->toBeInstanceOf(ProfileData::class)
+        ->and($result->id)->toBe(11);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/platform/api/v1/users'

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels\Platform;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AgentBotData;
+use Sashalenz\ChatwootApi\Data\Paginated;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -15,54 +16,52 @@ use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 final class PlatformAgentBots extends PlatformModel
 {
     /**
-     * @return Collection<string,mixed>
+     * @return Paginated<AgentBotData>
      *
      * @throws ChatwootApiException
      */
-    public function list(): Collection
+    public function list(): Paginated
     {
-        return $this->httpGet($this->platformPath('agent_bots'));
+        return Paginated::fromResponse($this->httpGet($this->platformPath('agent_bots'))->all(), AgentBotData::class);
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $agentBotId): Collection
+    public function get(int $agentBotId): AgentBotData
     {
-        return $this->httpGet($this->platformPath("agent_bots/{$agentBotId}"));
+        return AgentBotData::from($this->httpGet($this->platformPath("agent_bots/{$agentBotId}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'outgoing_url'=>…, 'account_id'=>…]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): AgentBotData
     {
-        return $this->httpPost($this->platformPath('agent_bots'), $attributes);
+        return AgentBotData::from($this->httpPost($this->platformPath('agent_bots'), $attributes)->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $agentBotId, array $attributes): Collection
+    public function update(int $agentBotId, array $attributes): AgentBotData
     {
-        return $this->httpPatch($this->platformPath("agent_bots/{$agentBotId}"), $attributes);
+        return AgentBotData::from($this->httpPatch($this->platformPath("agent_bots/{$agentBotId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete an agent bot. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $agentBotId): Collection
+    public function delete(int $agentBotId): bool
     {
-        return $this->httpDelete($this->platformPath("agent_bots/{$agentBotId}"));
+        $this->httpDelete($this->platformPath("agent_bots/{$agentBotId}"));
+
+        return true;
     }
 }

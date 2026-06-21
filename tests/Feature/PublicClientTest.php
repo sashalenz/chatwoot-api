@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Sashalenz\ChatwootApi\ChatwootApi;
+use Sashalenz\ChatwootApi\Data\PublicContactData;
+use Sashalenz\ChatwootApi\Data\PublicConversationData;
+use Sashalenz\ChatwootApi\Data\PublicInboxData;
+use Sashalenz\ChatwootApi\Data\PublicMessageData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 it('reads inbox info via the Client API (no auth header)', function (): void {
@@ -12,7 +16,8 @@ it('reads inbox info via the Client API (no auth header)', function (): void {
 
     $result = ChatwootApi::client()->inbox();
 
-    expect($result->get('name'))->toBe('A20 Viber');
+    expect($result)->toBeInstanceOf(PublicInboxData::class)
+        ->and($result->name)->toBe('A20 Viber');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident'
@@ -28,7 +33,8 @@ it('creates a contact and exposes the source_id', function (): void {
         'custom_attributes' => ['client_id' => 42],
     ]);
 
-    expect($result->get('source_id'))->toBe('src-1');
+    expect($result)->toBeInstanceOf(PublicContactData::class)
+        ->and($result->sourceId)->toBe('src-1');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts'
@@ -41,7 +47,8 @@ it('opens a conversation for a source_id', function (): void {
 
     $result = ChatwootApi::client()->createConversation('src-1');
 
-    expect($result->get('id'))->toBe(9);
+    expect($result)->toBeInstanceOf(PublicConversationData::class)
+        ->and($result->id)->toBe(9);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
         && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations');
@@ -98,16 +105,21 @@ it('fetches a contact by source_id', function (): void {
 
     $result = ChatwootApi::client()->getContact('src-1');
 
-    expect($result->get('name'))->toBe('Petro');
+    expect($result)->toBeInstanceOf(PublicContactData::class)
+        ->and($result->name)->toBe('Petro');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1');
 });
 
 it('lists the conversations of a contact', function (): void {
-    Http::fake(['*' => Http::response([['id' => 9]], 200)]);
+    Http::fake(['*' => Http::response([['id' => 9, 'status' => 'open']], 200)]);
 
-    ChatwootApi::client()->listConversations('src-1');
+    $result = ChatwootApi::client()->listConversations('src-1');
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(PublicConversationData::class)
+        ->and($result->payload[0]->id)->toBe(9);
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations');
@@ -123,9 +135,13 @@ it('fetches a single conversation of a contact', function (): void {
 });
 
 it('lists the messages of a conversation', function (): void {
-    Http::fake(['*' => Http::response([['id' => 77]], 200)]);
+    Http::fake(['*' => Http::response([['id' => 77, 'content' => 'hi']], 200)]);
 
-    ChatwootApi::client()->listMessages('src-1', 9);
+    $result = ChatwootApi::client()->listMessages('src-1', 9);
+
+    expect($result->count())->toBe(1)
+        ->and($result->payload[0])->toBeInstanceOf(PublicMessageData::class)
+        ->and($result->payload[0]->content)->toBe('hi');
 
     Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
         && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations/9/messages');

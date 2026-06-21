@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi\ApiModels\Platform;
 
-use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\AccountUserData;
+use Sashalenz\ChatwootApi\Data\Paginated;
+use Sashalenz\ChatwootApi\Data\PlatformAccountData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -16,84 +18,83 @@ final class PlatformAccounts extends PlatformModel
 {
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'locale'=>…, 'support_email'=>…]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): PlatformAccountData
     {
-        return $this->httpPost($this->platformPath('accounts'), $attributes);
+        return PlatformAccountData::from($this->httpPost($this->platformPath('accounts'), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $accountId): Collection
+    public function get(int $accountId): PlatformAccountData
     {
-        return $this->httpGet($this->platformPath("accounts/{$accountId}"));
+        return PlatformAccountData::from($this->httpGet($this->platformPath("accounts/{$accountId}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $accountId, array $attributes): Collection
+    public function update(int $accountId, array $attributes): PlatformAccountData
     {
-        return $this->httpPatch($this->platformPath("accounts/{$accountId}"), $attributes);
+        return PlatformAccountData::from($this->httpPatch($this->platformPath("accounts/{$accountId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete an account. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $accountId): Collection
+    public function delete(int $accountId): bool
     {
-        return $this->httpDelete($this->platformPath("accounts/{$accountId}"));
+        $this->httpDelete($this->platformPath("accounts/{$accountId}"));
+
+        return true;
     }
 
     /**
      * List the users linked to an account.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<AccountUserData>
      *
      * @throws ChatwootApiException
      */
-    public function users(int $accountId): Collection
+    public function users(int $accountId): Paginated
     {
-        return $this->httpGet($this->platformPath("accounts/{$accountId}/account_users"));
+        return Paginated::fromResponse(
+            $this->httpGet($this->platformPath("accounts/{$accountId}/account_users"))->all(),
+            AccountUserData::class,
+        );
     }
 
     /**
      * Link a user to an account with a role.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function createUser(int $accountId, int $userId, string $role = 'agent'): Collection
+    public function createUser(int $accountId, int $userId, string $role = 'agent'): AccountUserData
     {
-        return $this->httpPost($this->platformPath("accounts/{$accountId}/account_users"), [
+        return AccountUserData::from($this->httpPost($this->platformPath("accounts/{$accountId}/account_users"), [
             'user_id' => $userId,
             'role' => $role,
-        ]);
+        ])->all());
     }
 
     /**
-     * Unlink a user from an account.
-     *
-     * @return Collection<string,mixed>
+     * Unlink a user from an account. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function deleteUser(int $accountId, int $userId): Collection
+    public function deleteUser(int $accountId, int $userId): bool
     {
-        return $this->httpDelete($this->platformPath("accounts/{$accountId}/account_users"), [
+        $this->httpDelete($this->platformPath("accounts/{$accountId}/account_users"), [
             'user_id' => $userId,
         ]);
+
+        return true;
     }
 }

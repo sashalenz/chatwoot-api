@@ -6,6 +6,11 @@ namespace Sashalenz\ChatwootApi\ApiModels;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Conditionable;
+use Sashalenz\ChatwootApi\Data\Paginated;
+use Sashalenz\ChatwootApi\Data\PublicContactData;
+use Sashalenz\ChatwootApi\Data\PublicConversationData;
+use Sashalenz\ChatwootApi\Data\PublicInboxData;
+use Sashalenz\ChatwootApi\Data\PublicMessageData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 use Sashalenz\ChatwootApi\Request;
 
@@ -45,13 +50,11 @@ final class PublicClient
     /**
      * Read-only inbox info (also handy as a token/identifier health check).
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function inbox(): Collection
+    public function inbox(): PublicInboxData
     {
-        return $this->dispatch('GET', 'public/api/v1/inboxes/'.$this->resolveIdentifier());
+        return PublicInboxData::from($this->dispatch('GET', 'public/api/v1/inboxes/'.$this->resolveIdentifier())->all());
     }
 
     /**
@@ -60,104 +63,102 @@ final class PublicClient
      * across sessions (e.g. the transport uid or CRM client ref).
      *
      * @param  array<string,mixed>  $attributes  e.g. ['identifier'=>…, 'name'=>…, 'phone_number'=>…, 'custom_attributes'=>[…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createContact(array $attributes): Collection
+    public function createContact(array $attributes): PublicContactData
     {
-        return $this->dispatch('POST', $this->base('contacts'), $attributes);
+        return PublicContactData::from($this->dispatch('POST', $this->base('contacts'), $attributes)->all());
     }
 
     /**
      * Fetch a contact by `source_id`.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function getContact(string $sourceId): Collection
+    public function getContact(string $sourceId): PublicContactData
     {
-        return $this->dispatch('GET', $this->base("contacts/{$sourceId}"));
+        return PublicContactData::from($this->dispatch('GET', $this->base("contacts/{$sourceId}"))->all());
     }
 
     /**
      * Update a contact (name / custom_attributes refresh from CRM).
      *
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function updateContact(string $sourceId, array $attributes): Collection
+    public function updateContact(string $sourceId, array $attributes): PublicContactData
     {
-        return $this->dispatch('PATCH', $this->base("contacts/{$sourceId}"), $attributes);
+        return PublicContactData::from($this->dispatch('PATCH', $this->base("contacts/{$sourceId}"), $attributes)->all());
     }
 
     /**
      * Open a conversation for a contact (by `source_id`).
      *
      * @param  array<string,mixed>  $extra
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createConversation(string $sourceId, array $extra = []): Collection
+    public function createConversation(string $sourceId, array $extra = []): PublicConversationData
     {
-        return $this->dispatch('POST', $this->base("contacts/{$sourceId}/conversations"), $extra);
+        return PublicConversationData::from($this->dispatch('POST', $this->base("contacts/{$sourceId}/conversations"), $extra)->all());
     }
 
     /**
      * List the contact's conversations.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<PublicConversationData>
      *
      * @throws ChatwootApiException
      */
-    public function listConversations(string $sourceId): Collection
+    public function listConversations(string $sourceId): Paginated
     {
-        return $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations"));
+        return Paginated::fromResponse(
+            $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations"))->all(),
+            PublicConversationData::class,
+        );
     }
 
     /**
      * Fetch a single conversation of the contact.
      *
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function getConversation(string $sourceId, int $conversationId): Collection
+    public function getConversation(string $sourceId, int $conversationId): PublicConversationData
     {
-        return $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations/{$conversationId}"));
+        return PublicConversationData::from($this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations/{$conversationId}"))->all());
     }
 
     /**
      * Push a customer message into a conversation (always `incoming`).
      *
      * @param  array<string,mixed>  $extra
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createMessage(string $sourceId, int $conversationId, string $content, array $extra = []): Collection
+    public function createMessage(string $sourceId, int $conversationId, string $content, array $extra = []): PublicMessageData
     {
-        return $this->dispatch(
+        return PublicMessageData::from($this->dispatch(
             'POST',
             $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages"),
             ['content' => $content, ...$extra],
-        );
+        )->all());
     }
 
     /**
      * List the messages of a conversation.
      *
-     * @return Collection<string,mixed>
+     * @return Paginated<PublicMessageData>
      *
      * @throws ChatwootApiException
      */
-    public function listMessages(string $sourceId, int $conversationId): Collection
+    public function listMessages(string $sourceId, int $conversationId): Paginated
     {
-        return $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages"));
+        return Paginated::fromResponse(
+            $this->dispatch('GET', $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages"))->all(),
+            PublicMessageData::class,
+        );
     }
 
     /**
@@ -165,17 +166,16 @@ final class PublicClient
      * conversation's survey message).
      *
      * @param  array<string,mixed>  $attributes  e.g. ['submitted_values'=>['csat_survey_response'=>['rating'=>5, 'feedback_message'=>'…']]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function updateMessage(string $sourceId, int $conversationId, int $messageId, array $attributes): Collection
+    public function updateMessage(string $sourceId, int $conversationId, int $messageId, array $attributes): PublicMessageData
     {
-        return $this->dispatch(
+        return PublicMessageData::from($this->dispatch(
             'PATCH',
             $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages/{$messageId}"),
             $attributes,
-        );
+        )->all());
     }
 
     /**
@@ -184,11 +184,10 @@ final class PublicClient
      * repeated `attachments[]` part. `$content` is the optional text/caption.
      *
      * @param  array<int,array{contents:string,filename?:string}>  $attachments  raw file bytes + filename
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function createMessageWithAttachments(string $sourceId, int $conversationId, ?string $content, array $attachments): Collection
+    public function createMessageWithAttachments(string $sourceId, int $conversationId, ?string $content, array $attachments): PublicMessageData
     {
         $parts = array_map(
             static fn (array $a): array => [
@@ -210,7 +209,7 @@ final class PublicClient
         /** @var array<string,mixed> $json */
         $json = $response->json() ?? [];
 
-        return collect($json);
+        return PublicMessageData::from($json);
     }
 
     /**

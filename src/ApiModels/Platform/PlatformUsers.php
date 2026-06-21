@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sashalenz\ChatwootApi\ApiModels\Platform;
 
 use Illuminate\Support\Collection;
+use Sashalenz\ChatwootApi\Data\ProfileData;
 use Sashalenz\ChatwootApi\Exceptions\ChatwootApiException;
 
 /**
@@ -16,48 +17,47 @@ final class PlatformUsers extends PlatformModel
 {
     /**
      * @param  array<string,mixed>  $attributes  e.g. ['name'=>…, 'email'=>…, 'password'=>…, 'custom_attributes'=>[…]]
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function create(array $attributes): Collection
+    public function create(array $attributes): ProfileData
     {
-        return $this->httpPost($this->platformPath('users'), $attributes);
+        return ProfileData::from($this->httpPost($this->platformPath('users'), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
-     *
      * @throws ChatwootApiException
      */
-    public function get(int $userId): Collection
+    public function get(int $userId): ProfileData
     {
-        return $this->httpGet($this->platformPath("users/{$userId}"));
+        return ProfileData::from($this->httpGet($this->platformPath("users/{$userId}"))->all());
     }
 
     /**
      * @param  array<string,mixed>  $attributes
-     * @return Collection<string,mixed>
      *
      * @throws ChatwootApiException
      */
-    public function update(int $userId, array $attributes): Collection
+    public function update(int $userId, array $attributes): ProfileData
     {
-        return $this->httpPatch($this->platformPath("users/{$userId}"), $attributes);
+        return ProfileData::from($this->httpPatch($this->platformPath("users/{$userId}"), $attributes)->all());
     }
 
     /**
-     * @return Collection<string,mixed>
+     * Delete a user. Returns true on success.
      *
      * @throws ChatwootApiException
      */
-    public function delete(int $userId): Collection
+    public function delete(int $userId): bool
     {
-        return $this->httpDelete($this->platformPath("users/{$userId}"));
+        $this->httpDelete($this->platformPath("users/{$userId}"));
+
+        return true;
     }
 
     /**
-     * Get an SSO login link for the user.
+     * Get an SSO login link for the user. The response is a small `{url: …}`
+     * payload, returned as a Collection.
      *
      * @return Collection<string,mixed>
      *
