@@ -113,6 +113,41 @@ final class PublicClient
     }
 
     /**
+     * Push an incoming message carrying file attachments (customer media:
+     * pictures, video, documents). Sent as multipart — each item becomes a
+     * repeated `attachments[]` part. `$content` is the optional text/caption.
+     *
+     * @param  array<int,array{contents:string,filename?:string}>  $attachments  raw file bytes + filename
+     * @return Collection<string,mixed>
+     *
+     * @throws ChatwootApiException
+     */
+    public function createMessageWithAttachments(string $sourceId, int $conversationId, ?string $content, array $attachments): Collection
+    {
+        $parts = array_map(
+            static fn (array $a): array => [
+                'name' => 'attachments[]',
+                'contents' => $a['contents'],
+                'filename' => $a['filename'] ?? 'attachment',
+            ],
+            array_values($attachments),
+        );
+
+        $response = (new Request(
+            'POST',
+            $this->base("contacts/{$sourceId}/conversations/{$conversationId}/messages"),
+            $content !== null && $content !== '' ? ['content' => $content] : [],
+            [],
+            $parts,
+        ))->make();
+
+        /** @var array<string,mixed> $json */
+        $json = $response->json() ?? [];
+
+        return collect($json);
+    }
+
+    /**
      * Compute the identity-validation hash for a contact identifier. Only needed
      * when the inbox has identity validation enabled.
      *

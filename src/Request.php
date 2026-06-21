@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sashalenz\ChatwootApi;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -25,14 +26,16 @@ final class Request
     private const RETRY_SLEEP = 200;
 
     /**
-     * @param  array<string,mixed>  $params  query for GET, JSON body otherwise
+     * @param  array<string,mixed>  $params  query for GET, JSON/form body otherwise
      * @param  array<string,string>  $headers
+     * @param  array<int,array{name?:string,contents:string,filename?:string}>  $attachments  when non-empty the request is sent as multipart POST (files + $params as form fields)
      */
     public function __construct(
         private readonly string $method,
         private readonly string $path,
         private readonly array $params,
         private readonly array $headers,
+        private readonly array $attachments = [],
     ) {}
 
     /**
@@ -46,6 +49,10 @@ final class Request
             ->withHeaders($this->headers)
             ->acceptJson();
 
+        if ($this->attachments !== []) {
+            return $this->makeMultipart($request);
+        }
+
         try {
             return (match (strtoupper($this->method)) {
                 'GET' => $request->get($this->path, $this->params),
@@ -55,6 +62,30 @@ final class Request
                 'DELETE' => $request->asJson()->delete($this->path, $this->params),
                 default => throw new ChatwootApiException("Unsupported HTTP method [{$this->method}]."),
             })->throw();
+        } catch (RequestException $e) {
+            throw new ChatwootApiException('Chatwoot API transport error: '.$e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * Multipart POST: attach each file as a repeated `attachments[]` part and
+     * send $params as plain form fields. The Chatwoot Client API message
+     * endpoint accepts customer media exactly this way (same as the web widget).
+     *
+     * @throws ChatwootApiException
+     */
+    private function makeMultipart(PendingRequest $request): Response
+    {
+        foreach ($this->attachments as $attachment) {
+            $request = $request->attach(
+                $attachment['name'] ?? 'attachments[]',
+                $attachment['contents'],
+                $attachment['filename'] ?? 'attachment',
+            );
+        }
+
+        try {
+            return $request->post($this->path, $this->params)->throw();
         } catch (RequestException $e) {
             throw new ChatwootApiException('Chatwoot API transport error: '.$e->getMessage(), $e->getCode(), $e);
         }

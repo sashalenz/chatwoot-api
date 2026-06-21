@@ -57,6 +57,42 @@ it('pushes an incoming message into a conversation', function (): void {
         && $request['content'] === 'Привіт');
 });
 
+it('pushes an incoming message with a file attachment as multipart', function (): void {
+    Http::fake(['*' => Http::response(['id' => 88], 200)]);
+
+    ChatwootApi::client()->createMessageWithAttachments('src-1', 9, 'фото клієнта', [
+        ['contents' => 'RAWIMAGEBYTES', 'filename' => 'photo.jpg'],
+    ]);
+
+    Http::assertSent(function (Request $request): bool {
+        $body = (string) $request->body();
+
+        return $request->method() === 'POST'
+            && $request->url() === 'https://chatwoot.test/public/api/v1/inboxes/inbox-ident/contacts/src-1/conversations/9/messages'
+            && $request->isMultipart()
+            && str_contains($body, 'name="attachments[]"')
+            && str_contains($body, 'filename="photo.jpg"')
+            && str_contains($body, 'RAWIMAGEBYTES')
+            && str_contains($body, 'фото клієнта');
+    });
+});
+
+it('sends an attachment with no caption (content omitted)', function (): void {
+    Http::fake(['*' => Http::response(['id' => 89], 200)]);
+
+    ChatwootApi::client()->createMessageWithAttachments('src-1', 9, null, [
+        ['contents' => 'BYTES', 'filename' => 'doc.pdf'],
+    ]);
+
+    Http::assertSent(function (Request $request): bool {
+        $body = (string) $request->body();
+
+        return $request->isMultipart()
+            && str_contains($body, 'filename="doc.pdf"')
+            && ! str_contains($body, 'name="content"');
+    });
+});
+
 it('updates a contact via PATCH', function (): void {
     Http::fake(['*' => Http::response(['source_id' => 'src-1'], 200)]);
 
