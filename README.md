@@ -171,6 +171,16 @@ ChatwootApi::messages()
 | `messages()` | `create(int $conversationId, string $content, string $messageType = 'incoming', array $extra = [])` | Post a message (`incoming` or `outgoing`). |
 | | `list(int $conversationId, array $query = [])` | List messages of a conversation. |
 | | `delete(int $conversationId, int $messageId)` | Delete a message. |
+| `agents()` | `list` / `create` / `update` / `delete` | Manage account agents. |
+| `agentBots()` | `list` / `get` / `create` / `update` / `delete` | Manage agent bots. |
+| `teams()` | `list` / `get` / `create` / `update` / `delete` | Manage teams. |
+| | `members` / `addMembers` / `updateMembers` / `removeMembers` | Manage team agents. |
+| `labels()` | `list` / `get` / `create` / `update` / `delete` | Manage the label catalogue. |
+| `cannedResponses()` | `list` / `create` / `update` / `delete` | Manage canned responses. |
+| `customAttributeDefinitions()` | `list` / `get` / `create` / `update` / `delete` | Manage custom attribute definitions. |
+| `customFilters()` | `list` / `get` / `create` / `update` / `delete` | Manage saved custom filters. |
+| `account()` | `get()` / `update(array $attributes)` | Read / update the current account. |
+| `profile()` | `get()` / `update(array $profile)` | Read / update the token owner's profile. |
 | `client()` | `inbox()` | Read inbox info (health check). |
 | | `createContact(array $attributes)` | Upsert a contact → returns `source_id`. |
 | | `getContact(string $sourceId)` | Fetch a contact by `source_id`. |
