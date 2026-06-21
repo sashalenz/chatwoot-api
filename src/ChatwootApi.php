@@ -7,17 +7,20 @@ namespace Sashalenz\ChatwootApi;
 use Sashalenz\ChatwootApi\ApiModels\Account;
 use Sashalenz\ChatwootApi\ApiModels\AgentBots;
 use Sashalenz\ChatwootApi\ApiModels\Agents;
+use Sashalenz\ChatwootApi\ApiModels\AutomationRules;
 use Sashalenz\ChatwootApi\ApiModels\CannedResponses;
 use Sashalenz\ChatwootApi\ApiModels\Contacts;
 use Sashalenz\ChatwootApi\ApiModels\Conversations;
 use Sashalenz\ChatwootApi\ApiModels\CustomAttributeDefinitions;
 use Sashalenz\ChatwootApi\ApiModels\CustomFilters;
 use Sashalenz\ChatwootApi\ApiModels\Inboxes;
+use Sashalenz\ChatwootApi\ApiModels\Integrations;
 use Sashalenz\ChatwootApi\ApiModels\Labels;
 use Sashalenz\ChatwootApi\ApiModels\Messages;
 use Sashalenz\ChatwootApi\ApiModels\Profile;
 use Sashalenz\ChatwootApi\ApiModels\PublicClient;
 use Sashalenz\ChatwootApi\ApiModels\Teams;
+use Sashalenz\ChatwootApi\ApiModels\Webhooks;
 
 /**
  * Static entrypoint, mirroring `MonobankApi`/`ViberBotApi`.
@@ -94,6 +97,21 @@ class ChatwootApi
     public static function profile(): Profile
     {
         return new Profile;
+    }
+
+    public static function automationRules(): AutomationRules
+    {
+        return new AutomationRules;
+    }
+
+    public static function webhooks(): Webhooks
+    {
+        return new Webhooks;
+    }
+
+    public static function integrations(): Integrations
+    {
+        return new Integrations;
     }
 
     /**
